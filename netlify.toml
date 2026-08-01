@@ -1,0 +1,16 @@
+[build]
+  base    = "."
+  command = "pnpm --filter @workspace/mockup-sandbox... run build"
+  publish = "artifacts/mockup-sandbox/dist"
+
+# Redirect root to the form directly
+[[redirects]]
+  from   = "/"
+  to     = "/preview/loan-calculator/OmanHousingForm"
+  status = 302
+
+# SPA catch-all — every other path serves index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
