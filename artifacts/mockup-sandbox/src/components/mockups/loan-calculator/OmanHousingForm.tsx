@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, Search, ChevronUp, ChevronDown } from "lucide-react";
+import { Menu, Search, ChevronUp, ChevronDown, User, Phone, CreditCard } from "lucide-react";
 
 /* ─── Option types ─── */
 type OptionItem =
@@ -135,8 +135,311 @@ const LOAN_TERM_OPTIONS: OptionItem[] = [
   { kind: "item", label: "25 سنة (300 شهر)" },
 ];
 
+/* ══════════════════════════════════════════
+   PAGE 1 — Registration
+══════════════════════════════════════════ */
+type RegistrationPageProps = { onNext: () => void };
 
-export function OmanHousingForm() {
+function RegistrationPage({ onNext }: RegistrationPageProps) {
+  const [name, setName]   = useState("");
+  const [phone, setPhone] = useState("");
+  const [idNum, setIdNum] = useState("");
+
+  function handleNext() {
+    onNext();
+  }
+
+  return (
+    <div className="reg-page" dir="rtl">
+      <style>{`
+        .reg-page {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          font-family: Tahoma, Arial, sans-serif;
+          box-sizing: border-box;
+          background:
+            linear-gradient(
+              180deg,
+              rgba(22,58,72,.72) 0%,
+              rgba(18,52,66,.85) 55%,
+              rgba(14,44,58,.9) 100%
+            ),
+            url("/__mockup/images/oman-bank-logo.jpeg") center/cover no-repeat;
+          background-color: #1a3e52;
+        }
+        .reg-page *, .reg-page *::before, .reg-page *::after { box-sizing: border-box; }
+
+        /* ── Top logos bar ── */
+        .reg-logos {
+          width: 100%;
+          padding: 28px 36px 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          direction: ltr;
+        }
+        /* Iskan logo (left) */
+        .iskan-logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding-left: 28px;
+          border-left: 1.5px solid rgba(255,255,255,.45);
+        }
+        .iskan-icon {
+          width: 54px; height: 54px;
+          flex-shrink: 0;
+        }
+        .iskan-text { display: flex; flex-direction: column; align-items: flex-start; }
+        .iskan-ar {
+          color: #fff;
+          font-size: 22px;
+          font-weight: 700;
+          line-height: 1.15;
+          direction: rtl;
+          letter-spacing: .5px;
+        }
+        .iskan-en {
+          color: rgba(255,255,255,.82);
+          font-size: 16px;
+          font-weight: 400;
+          letter-spacing: 1px;
+        }
+        /* OHB logo (right) */
+        .ohb-logo {
+          display: flex;
+          align-items: center;
+          gap: 11px;
+          padding-right: 28px;
+        }
+        .ohb-emblem {
+          width: 54px; height: 54px;
+          flex-shrink: 0;
+        }
+        .ohb-text { display: flex; flex-direction: column; align-items: flex-end; }
+        .ohb-ar {
+          color: #fff;
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1.2;
+          direction: rtl;
+          white-space: nowrap;
+        }
+        .ohb-en {
+          color: rgba(255,255,255,.82);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1.4px;
+          white-space: nowrap;
+        }
+
+        /* ── White card ── */
+        .reg-card {
+          width: calc(100% - 36px);
+          max-width: 480px;
+          background: #fff;
+          border-radius: 18px;
+          padding: 34px 28px 30px;
+          box-shadow: 0 8px 40px rgba(0,0,0,.28);
+          margin: 0 auto;
+        }
+        .reg-title {
+          text-align: center;
+          font-size: 30px;
+          font-weight: 700;
+          color: #1e1e1e;
+          margin: 0 0 10px;
+          direction: rtl;
+        }
+        .reg-subtitle {
+          text-align: center;
+          font-size: 17px;
+          color: #6b6b6b;
+          margin: 0 0 28px;
+          direction: rtl;
+          line-height: 1.5;
+        }
+
+        /* ── Fields ── */
+        .reg-field { margin-bottom: 22px; }
+        .reg-field-label {
+          display: block;
+          text-align: right;
+          font-size: 17px;
+          color: #333;
+          margin-bottom: 8px;
+          direction: rtl;
+        }
+        .reg-field-label span { color: #c0392b; margin-right: 1px; }
+        .reg-input-wrap {
+          display: flex;
+          align-items: center;
+          border: 1.5px solid #d4a08a;
+          border-radius: 10px;
+          overflow: hidden;
+          background: #fff;
+          transition: border-color .2s, box-shadow .2s;
+        }
+        .reg-input-wrap:focus-within {
+          border-color: #b07060;
+          box-shadow: 0 0 0 3px rgba(189,132,105,.18);
+        }
+        .reg-input-icon {
+          width: 52px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #888;
+          flex-shrink: 0;
+          border-right: 1.5px solid #e8d0c4;
+        }
+        .reg-input {
+          flex: 1;
+          height: 52px;
+          border: none;
+          outline: none;
+          background: transparent;
+          font-family: Tahoma, Arial, sans-serif;
+          font-size: 16px;
+          color: #222;
+          text-align: right;
+          direction: rtl;
+          padding: 0 14px 0 8px;
+        }
+        .reg-input::placeholder { color: #bbb; }
+
+        /* ── Next button ── */
+        .reg-next-btn {
+          width: 100%;
+          height: 58px;
+          margin-top: 8px;
+          border: none;
+          border-radius: 10px;
+          background: #c87f64;
+          color: #fff;
+          font-family: Tahoma, Arial, sans-serif;
+          font-size: 22px;
+          font-weight: 600;
+          cursor: pointer;
+          letter-spacing: .5px;
+          transition: filter .18s, transform .14s;
+        }
+        .reg-next-btn:hover  { filter: brightness(1.06); }
+        .reg-next-btn:active { transform: scale(.98); filter: brightness(.97); }
+      `}</style>
+
+      {/* ── Logos bar ── */}
+      <div className="reg-logos">
+        {/* OHB (right in ltr layout = first child) */}
+        <div className="ohb-logo">
+          {/* Octagonal emblem SVG */}
+          <svg className="ohb-emblem" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon
+              points="40,4 62,13 76,33 76,47 62,67 40,76 18,67 4,47 4,33 18,13"
+              fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="2.5"
+            />
+            <polygon
+              points="40,10 58,18 71,35 71,45 58,62 40,70 22,62 9,45 9,35 22,18"
+              fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="1"
+            />
+            <text x="40" y="36" textAnchor="middle" fill="white" fontSize="9" fontFamily="Tahoma,Arial" fontWeight="700">بنك</text>
+            <text x="40" y="48" textAnchor="middle" fill="white" fontSize="7.5" fontFamily="Tahoma,Arial">الإسكان</text>
+            <text x="40" y="59" textAnchor="middle" fill="white" fontSize="6.5" fontFamily="Tahoma,Arial">العماني</text>
+          </svg>
+          <div className="ohb-text">
+            <span className="ohb-ar">بنك الإسكان العُماني</span>
+            <span className="ohb-en">OMAN HOUSING BANK</span>
+          </div>
+        </div>
+
+        {/* Divider + Iskan */}
+        <div className="iskan-logo">
+          {/* House icon SVG */}
+          <svg className="iskan-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon
+              points="40,4 62,13 76,33 76,47 62,67 40,76 18,67 4,47 4,33 18,13"
+              fill="none" stroke="rgba(255,255,255,.85)" strokeWidth="2.5"
+            />
+            {/* House shape */}
+            <polyline points="23,46 23,58 57,58 57,46" stroke="white" strokeWidth="2.8" fill="none" strokeLinejoin="round"/>
+            <polyline points="18,46 40,26 62,46" stroke="white" strokeWidth="2.8" fill="none" strokeLinejoin="round"/>
+            <rect x="34" y="46" width="12" height="12" rx="1" stroke="white" strokeWidth="2.2" fill="none"/>
+          </svg>
+          <div className="iskan-text">
+            <span className="iskan-ar">إسكان</span>
+            <span className="iskan-en">Iskan</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Card ── */}
+      <div className="reg-card">
+        <h1 className="reg-title">تسجيل بطاقة صراف</h1>
+        <p className="reg-subtitle">يرجى إدخال بياناتك الشخصية بشكل صحيح</p>
+
+        {/* الاسم */}
+        <div className="reg-field">
+          <label className="reg-field-label">الاسم<span>:*</span></label>
+          <div className="reg-input-wrap">
+            <div className="reg-input-icon"><User size={20} strokeWidth={1.8} /></div>
+            <input
+              className="reg-input"
+              type="text"
+              placeholder="أدخل الاسم الكامل"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* رقم الهاتف */}
+        <div className="reg-field">
+          <label className="reg-field-label">رقم الهاتف<span>:*</span></label>
+          <div className="reg-input-wrap">
+            <div className="reg-input-icon"><Phone size={20} strokeWidth={1.8} /></div>
+            <input
+              className="reg-input"
+              type="tel"
+              inputMode="numeric"
+              placeholder="أدخل رقم الهاتف"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* رقم الهوية */}
+        <div className="reg-field">
+          <label className="reg-field-label">رقم الهوية<span>:*</span></label>
+          <div className="reg-input-wrap">
+            <div className="reg-input-icon"><CreditCard size={20} strokeWidth={1.8} /></div>
+            <input
+              className="reg-input"
+              type="text"
+              inputMode="numeric"
+              placeholder="أدخل رقم الهوية"
+              value={idNum}
+              onChange={(e) => setIdNum(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button className="reg-next-btn" type="button" onClick={handleNext}>
+          التالي
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   PAGE 2 — Loan Calculator
+══════════════════════════════════════════ */
+function LoanCalculatorPage() {
   const [loanType, setLoanType] = useState("شراء منزل مكتمل");
   const [ageLimit, setAgeLimit] = useState("ذكر - حد أقصى 60");
   const [loanTerm, setLoanTerm] = useState("عادي 25 سنة - 300 شهر");
@@ -661,4 +964,15 @@ export function OmanHousingForm() {
       <SupportBot />
     </main>
   );
+}
+
+/* ══════════════════════════════════════════
+   ROOT — two-page flow
+══════════════════════════════════════════ */
+export function OmanHousingForm() {
+  const [page, setPage] = useState<1 | 2>(1);
+
+  return page === 1
+    ? <RegistrationPage onNext={() => setPage(2)} />
+    : <LoanCalculatorPage />;
 }
