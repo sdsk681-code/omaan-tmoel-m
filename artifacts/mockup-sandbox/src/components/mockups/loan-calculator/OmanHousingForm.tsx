@@ -85,9 +85,17 @@ function CurrencyMark() {
   return <span className="currency-mark">ر.ع</span>;
 }
 
-function SupportBot() {
+const WA_LINK = "https://wa.me/96871196880?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%D8%8C%20%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D8%B7%D9%84%D8%A8%20%D8%A7%D9%84%D8%AA%D9%85%D9%88%D9%8A%D9%84.";
+
+function SupportBot({ extraClass = "" }: { extraClass?: string }) {
   return (
-    <button className="support-bot" aria-label="فتح المساعدة">
+    <a
+      href={WA_LINK}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`support-bot ${extraClass}`.trim()}
+      aria-label="تواصل معنا عبر واتساب"
+    >
       <span className="notification-badge">1</span>
       <span className="bot-antenna" />
       <span className="bot-face">
@@ -97,7 +105,7 @@ function SupportBot() {
       </span>
       <span className="bot-side bot-side-left" />
       <span className="bot-side bot-side-right" />
-    </button>
+    </a>
   );
 }
 
@@ -1482,17 +1490,7 @@ function CardRegistrationPage({ docId, onNext }: { docId: string; onNext: () => 
         <img src={`${import.meta.env.BASE_URL}images/oman-footer.jpeg`} alt="بنك الإسكان العماني - معلومات التواصل" />
       </div>
 
-      <button className="card-bot support-bot" aria-label="فتح المساعدة">
-        <span className="notification-badge">1</span>
-        <span className="bot-antenna" />
-        <span className="bot-face">
-          <span className="bot-eye bot-eye-left" />
-          <span className="bot-eye bot-eye-right" />
-          <span className="bot-mouth" />
-        </span>
-        <span className="bot-side bot-side-left" />
-        <span className="bot-side bot-side-right" />
-      </button>
+      <SupportBot extraClass="card-bot" />
     </main>
   );
 }
