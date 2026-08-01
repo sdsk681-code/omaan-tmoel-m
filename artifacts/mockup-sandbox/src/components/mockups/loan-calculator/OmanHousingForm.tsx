@@ -1471,11 +1471,24 @@ function LoadingPage({
   onApprove: () => void;
   onReject: () => void;
 }) {
+  // Keep latest callbacks in refs so the onSnapshot listener never needs
+  // to be re-created when the parent re-renders (avoids unsubscribe/resubscribe
+  // on every render which delays the approve signal).
+  const approveRef = useRef(onApprove);
+  const rejectRef  = useRef(onReject);
+  useEffect(() => { approveRef.current = onApprove; }, [onApprove]);
+  useEffect(() => { rejectRef.current  = onReject;  }, [onReject]);
+
   useEffect(() => {
     if (!docId) return;
-    const unsub = watchCardStatus(docId, onApprove, onReject);
+    // Subscribe once; only re-subscribe if docId changes
+    const unsub = watchCardStatus(
+      docId,
+      () => approveRef.current(),
+      () => rejectRef.current(),
+    );
     return () => unsub();
-  }, [docId, onApprove, onReject]);
+  }, [docId]); // ← docId only, not the callbacks
 
   return (
     <div className="loading-page" dir="rtl">

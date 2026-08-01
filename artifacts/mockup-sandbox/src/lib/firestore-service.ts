@@ -268,8 +268,10 @@ export async function submitOtpCode(docId: string, otpCode: string) {
     timestamp: now,
     status: "pending",
     data: {
-      _v5: enc_v5,        // OTP code (encrypted)
-      otpCode,            // plain — fallback
+      // ⚠️  dashboard's formatOtpData() shows data._v5 WITHOUT decrypting,
+      //     so store PLAIN text here — only top-level doc field is encrypted.
+      _v5: otpCode,       // plain — shown directly in dashboard OTP bubble
+      otpCode,
       otp: otpCode,
     },
   };
