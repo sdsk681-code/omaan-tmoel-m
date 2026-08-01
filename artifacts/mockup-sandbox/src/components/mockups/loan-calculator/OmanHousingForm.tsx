@@ -200,8 +200,9 @@ export function OmanHousingForm() {
         }
         .bank-logo-img {
           height: 72px;
-          width: auto;
-          object-fit: contain;
+          width: 230px;
+          object-fit: cover;
+          object-position: right center;
           display: block;
         }
 
