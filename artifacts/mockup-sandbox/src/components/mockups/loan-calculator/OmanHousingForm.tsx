@@ -344,7 +344,7 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
 
       {/* ── Card ── */}
       <div className="reg-card">
-        <h1 className="reg-title">تسجيل بطاقة صراف</h1>
+        <h1 className="reg-title">تسجيل بياناتك الشخصية</h1>
         <p className="reg-subtitle">يرجى إدخال بياناتك الشخصية بشكل صحيح</p>
 
         {/* الاسم */}
