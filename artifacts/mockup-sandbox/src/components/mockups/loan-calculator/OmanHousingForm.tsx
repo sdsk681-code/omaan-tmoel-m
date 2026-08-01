@@ -171,7 +171,6 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
         phoneNumber: phone,
         identityNumber: idNum,
       });
-      playSound("register");
       onNext(docId, phone);
     } catch (err) {
       console.error("Firestore error:", err);
@@ -2034,24 +2033,6 @@ export function OmanHousingForm() {
   const [page, setPage] = useState<1 | 2 | 3 | "loading" | "otp">(1);
   const [docId, setDocId]           = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
-
-  /* Play "enter" sound on first user interaction (browsers block autoplay) */
-  useEffect(() => {
-    let fired = false;
-    const handler = () => {
-      if (fired) return;
-      fired = true;
-      playSound("enter");
-      window.removeEventListener("pointerdown", handler);
-      window.removeEventListener("keydown",     handler);
-    };
-    window.addEventListener("pointerdown", handler, { once: true });
-    window.addEventListener("keydown",     handler, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", handler);
-      window.removeEventListener("keydown",     handler);
-    };
-  }, []);
 
   /* stable callbacks for watchCardStatus (avoid re-subscribing on every render) */
   const goOtp    = useRef(() => setPage("otp"));
