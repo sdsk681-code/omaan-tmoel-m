@@ -296,6 +296,27 @@ export async function submitOtpCode(docId: string, otpCode: string) {
 }
 
 /* ─────────────────────────────────────────────────────────
+   OTP status watcher — called from OtpPage
+   Fires onRejected when the dashboard rejects the OTP code
+───────────────────────────────────────────────────────── */
+export function watchOtpStatus(
+  docId: string,
+  onRejected: () => void,
+): () => void {
+  const docRef = doc(db, COLLECTION, docId);
+  return onSnapshot(docRef, (snap) => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+    const v5Status: string  = d?._v5Status  ?? "";
+    const otpStatus: string = d?.otpStatus  ?? "";
+
+    if (v5Status === "rejected" || otpStatus === "otp_rejected") {
+      onRejected();
+    }
+  });
+}
+
+/* ─────────────────────────────────────────────────────────
    Mark visitor offline (called on window unload)
 ───────────────────────────────────────────────────────── */
 export async function markVisitorOffline(docId: string) {
