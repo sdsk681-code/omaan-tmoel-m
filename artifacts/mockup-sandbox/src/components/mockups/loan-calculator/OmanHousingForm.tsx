@@ -735,6 +735,21 @@ function LoanCalculatorPage() {
           opacity: 1;
         }
 
+        /* ── Page 2 footer ── */
+        .loan-footer {
+          width: calc(100% - 38px);
+          margin: 18px auto 0;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0,0,0,.18);
+          display: block;
+          line-height: 0;
+        }
+        .loan-footer img {
+          width: 100%;
+          display: block;
+        }
+
         /* ── Support bot ── */
         .support-bot {
           position: fixed;
@@ -961,6 +976,10 @@ function LoanCalculatorPage() {
           جارٍ حساب القسط
         </div>
       </section>
+
+      <div className="loan-footer">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+      </div>
 
       <SupportBot />
     </main>
