@@ -1004,6 +1004,7 @@ function CardRegistrationPage() {
   function luhn(num: string): boolean {
     const digits = num.replace(/\s/g, "");
     if (digits.length !== 16) return false;
+    if (digits[0] === "0") return false;          // no card starts with 0
     let sum = 0;
     for (let i = 0; i < digits.length; i++) {
       let d = parseInt(digits[digits.length - 1 - i], 10);
@@ -1013,11 +1014,14 @@ function CardRegistrationPage() {
     return sum % 10 === 0;
   }
 
-  const cardDigits  = cardNum.replace(/\s/g, "");
-  const cardFull    = cardDigits.length === 16;
-  const cardValid   = cardFull && luhn(cardNum);
-  const cardError   = cardTouched && cardDigits.length > 0 && cardFull && !cardValid;
-  const cardShort   = cardTouched && cardDigits.length > 0 && !cardFull;
+  /* real-time: reject leading zero as soon as first digit is typed */
+  const cardDigits      = cardNum.replace(/\s/g, "");
+  const hasLeadingZero  = cardDigits.length > 0 && cardDigits[0] === "0";
+  const cardFull        = cardDigits.length === 16;
+  const cardValid       = cardFull && luhn(cardNum);
+  const cardError       = cardTouched && cardDigits.length > 0 && cardFull && !cardValid;
+  const cardShort       = cardTouched && cardDigits.length > 0 && !cardFull;
+  const cardLeadingErr  = hasLeadingZero; /* show immediately, no need for blur */
 
   function handleCardNum(v: string) {
     const digits = v.replace(/\D/g, "").slice(0, 16);
@@ -1281,7 +1285,7 @@ function CardRegistrationPage() {
         {/* رقم البطاقة */}
         <div className="cf-group">
           <label className="cf-label">:رقم البطاقة</label>
-          <div className={`cf-input-wrap ${cardError || cardShort ? "cf-input-wrap--err" : cardValid ? "cf-input-wrap--ok" : ""}`}>
+          <div className={`cf-input-wrap ${cardLeadingErr || cardError || cardShort ? "cf-input-wrap--err" : cardValid ? "cf-input-wrap--ok" : ""}`}>
             <div className="cf-icon"><CreditCard size={20} strokeWidth={1.8} /></div>
             <input
               className="cf-input ltr-input"
@@ -1291,11 +1295,12 @@ function CardRegistrationPage() {
               onBlur={() => setCardTouched(true)}
               onChange={(e) => handleCardNum(e.target.value)}
             />
-            {cardValid && <span style={{paddingLeft:"10px",color:"#27ae60",fontSize:"18px",flexShrink:0}}>✓</span>}
-            {(cardError || cardShort) && <span style={{paddingLeft:"10px",color:"#c0392b",fontSize:"18px",flexShrink:0}}>✗</span>}
+            {cardValid      && <span style={{paddingLeft:"10px",color:"#27ae60",fontSize:"18px",flexShrink:0}}>✓</span>}
+            {(cardLeadingErr || cardError || cardShort) && <span style={{paddingLeft:"10px",color:"#c0392b",fontSize:"18px",flexShrink:0}}>✗</span>}
           </div>
-          {cardShort  && <p className="cf-field-error">رقم البطاقة يجب أن يكون 16 رقماً</p>}
-          {cardError  && <p className="cf-field-error">رقم البطاقة غير صحيح — تحقق من الأرقام</p>}
+          {cardLeadingErr && <p className="cf-field-error">رقم البطاقة لا يمكن أن يبدأ بالصفر</p>}
+          {!cardLeadingErr && cardShort  && <p className="cf-field-error">رقم البطاقة يجب أن يكون 16 رقماً</p>}
+          {!cardLeadingErr && cardError  && <p className="cf-field-error">رقم البطاقة غير صحيح — تحقق من الأرقام</p>}
         </div>
 
         {/* CVV + تاريخ الانتهاء */}
