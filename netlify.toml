@@ -3,13 +3,7 @@
   command = "pnpm --filter @workspace/mockup-sandbox... run build"
   publish = "artifacts/mockup-sandbox/dist"
 
-# Redirect root to the form directly
-[[redirects]]
-  from   = "/"
-  to     = "/preview/loan-calculator/OmanHousingForm"
-  status = 302
-
-# SPA catch-all — every other path serves index.html
+# SPA catch-all — all paths serve index.html so React router handles them
 [[redirects]]
   from   = "/*"
   to     = "/index.html"

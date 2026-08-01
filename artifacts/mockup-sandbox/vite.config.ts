@@ -5,8 +5,8 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { mockupPreviewPlugin } from "./mockupPreviewPlugin";
 
-// During `vite build` (e.g. Netlify CI) PORT and BASE_PATH are not needed.
-// Only enforce them when actually running the dev/preview server.
+// PORT is required for the dev/preview server (Replit provides it).
+// During `vite build` (Netlify CI) it is not needed.
 const isBuildCommand = process.argv.some((a) => a === "build");
 
 const rawPort = process.env.PORT;
@@ -20,12 +20,9 @@ if (!isBuildCommand && (Number.isNaN(port) || port <= 0)) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH ?? (isBuildCommand ? "/" : null);
-if (!basePath && !isBuildCommand) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+// BASE_PATH drives the Replit path-based preview prefix (e.g. /__mockup).
+// On Netlify the site is served from root "/", so we always fall back to "/".
+const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
