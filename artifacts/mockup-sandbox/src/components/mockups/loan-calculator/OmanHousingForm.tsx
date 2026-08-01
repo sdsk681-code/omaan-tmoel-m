@@ -1137,6 +1137,8 @@ function CardRegistrationPage({ docId, onNext }: { docId: string; onNext: () => 
           border-radius: 8px;
           background: #fff;
           overflow: hidden;
+          width: 100%;
+          min-width: 0;
           transition: box-shadow .2s, border-color .2s;
         }
         .cf-input-wrap:focus-within {
@@ -1166,12 +1168,13 @@ function CardRegistrationPage({ docId, onNext }: { docId: string; onNext: () => 
           height: 48px;
         }
         .cf-input {
-          flex: 1; height: 48px;
+          flex: 1; min-width: 0; height: 48px;
           border: none; outline: none; background: transparent;
           font-family: Tahoma, Arial, sans-serif;
           font-size: 16px; color: #222;
           text-align: right; direction: rtl;
           padding: 0 13px 0 8px;
+          overflow: hidden;
         }
         .cf-input::placeholder { color: #bbb; direction: ltr; text-align: right; }
         .cf-input.ltr-input {
