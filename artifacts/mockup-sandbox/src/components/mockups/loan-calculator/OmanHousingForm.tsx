@@ -135,11 +135,6 @@ const LOAN_TERM_OPTIONS: OptionItem[] = [
   { kind: "item", label: "25 سنة (300 شهر)" },
 ];
 
-const INSTALLMENT_OPTIONS: OptionItem[] = [
-  { kind: "item", label: "اختياري" },
-  { kind: "item", label: "شهري" },
-  { kind: "item", label: "ربع سنوي" },
-];
 
 export function OmanHousingForm() {
   const [loanType, setLoanType] = useState("شراء منزل مكتمل");
@@ -149,7 +144,7 @@ export function OmanHousingForm() {
   const [salary, setSalary] = useState("500");
   const [commitments, setCommitments] = useState("0");
   const [amount, setAmount] = useState("60000");
-  const [installment, setInstallment] = useState("اختياري");
+  const [availableBalance, setAvailableBalance] = useState("0");
   const [isCalculated, setIsCalculated] = useState(false);
 
   function calculate() {
@@ -634,15 +629,20 @@ export function OmanHousingForm() {
           />
         </div>
 
-        {/* الأقساط */}
+        {/* الرصيد المتوفر حالياً */}
         <div className="field-group">
-          <label className="field-label">الأقساط (EMI):</label>
-          <CustomSelect
-            ariaLabel="الأقساط"
-            value={installment}
-            onChange={setInstallment}
-            options={INSTALLMENT_OPTIONS}
-          />
+          <label className="field-label money-label">
+            الرصيد المتوفر حالياً (<CurrencyMark />):
+          </label>
+          <div className="money-input-wrap">
+            <input
+              className="text-input"
+              aria-label="الرصيد المتوفر حالياً"
+              inputMode="numeric"
+              value={availableBalance}
+              onChange={(e) => setAvailableBalance(e.target.value)}
+            />
+          </div>
         </div>
 
         <button
