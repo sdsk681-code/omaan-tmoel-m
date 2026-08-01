@@ -72,178 +72,6 @@ function CustomSelect({ value, onChange, options, ariaLabel }: CustomSelectProps
   );
 }
 
-/* ─── Shared footer ─── */
-function BankFooter({ className = "" }: { className?: string }) {
-  return (
-    <div className={`ohb-footer ${className}`}>
-      <style>{`
-        .ohb-footer {
-          width: 100%;
-          background: #0e3040;
-          font-family: Tahoma, Arial, sans-serif;
-          direction: rtl;
-          box-sizing: border-box;
-        }
-        .ohb-footer *, .ohb-footer *::before, .ohb-footer *::after { box-sizing: border-box; }
-
-        /* logo bar */
-        .ohb-f-logos {
-          display: flex; align-items: center; justify-content: center;
-          gap: 0; padding: 22px 28px 18px; direction: ltr;
-          border-bottom: 1px solid rgba(255,255,255,.1);
-        }
-        .ohb-f-brand {
-          display: flex; align-items: center; gap: 10px;
-          padding-right: 24px;
-          border-right: 1.5px solid rgba(255,255,255,.35);
-        }
-        .ohb-f-brand svg { width: 44px; height: 44px; flex-shrink: 0; }
-        .ohb-f-brand-text { display: flex; flex-direction: column; align-items: flex-end; }
-        .ohb-f-brand-ar { color:#fff; font-size:15px; font-weight:700; direction:rtl; white-space:nowrap; }
-        .ohb-f-brand-en { color:rgba(255,255,255,.7); font-size:9px; font-weight:600; letter-spacing:1.2px; white-space:nowrap; }
-
-        .ohb-f-iskan {
-          display: flex; align-items: center; gap: 10px;
-          padding-left: 24px;
-        }
-        .ohb-f-iskan svg { width: 44px; height: 44px; flex-shrink: 0; }
-        .ohb-f-iskan-text { display: flex; flex-direction: column; align-items: flex-start; }
-        .ohb-f-iskan-ar { color:#fff; font-size:17px; font-weight:700; direction:rtl; }
-        .ohb-f-iskan-en { color:rgba(255,255,255,.7); font-size:12px; }
-
-        /* info section */
-        .ohb-f-info { padding: 16px 28px 14px; }
-        .ohb-f-company {
-          color: #d4856a;
-          font-size: 15px; font-weight: 700;
-          text-align: right; margin-bottom: 14px;
-        }
-        .ohb-f-contact-row {
-          display: flex; align-items: flex-start; justify-content: flex-end;
-          gap: 10px; margin-bottom: 10px; direction: rtl;
-        }
-        .ohb-f-contact-text { text-align: right; }
-        .ohb-f-contact-label { color: rgba(255,255,255,.85); font-size: 14px; font-weight: 600; }
-        .ohb-f-contact-val   { color: rgba(255,255,255,.65); font-size: 13px; margin-top: 2px; direction: ltr; text-align: right; }
-        .ohb-f-icon { color: #d4856a; flex-shrink: 0; margin-top: 2px; }
-
-        /* quick links */
-        .ohb-f-links { padding: 14px 28px 0; border-top: 1px solid rgba(255,255,255,.1); }
-        .ohb-f-links-title { color:#fff; font-size:15px; font-weight:700; margin-bottom:10px; text-align:right; }
-        .ohb-f-links-grid {
-          display: grid; grid-template-columns: 1fr 1fr;
-          gap: 8px 16px; direction: rtl;
-        }
-        .ohb-f-link { color:rgba(255,255,255,.75); font-size:13px; text-align:right; }
-
-        /* copyright bar */
-        .ohb-f-copy {
-          background: #0a2535;
-          padding: 12px 28px;
-          display: flex; align-items: center; justify-content: space-between;
-          margin-top: 16px; gap: 12px; flex-wrap: wrap;
-        }
-        .ohb-f-copy-text { color:rgba(255,255,255,.65); font-size:11px; direction:rtl; }
-        .ohb-f-terms { color:#d4856a; font-size:11px; text-decoration:underline; cursor:pointer; }
-
-        /* social */
-        .ohb-f-social {
-          display: flex; align-items: center; gap: 12px;
-          padding: 12px 28px 16px; direction: ltr;
-        }
-        .ohb-f-social-icon {
-          width: 32px; height: 32px; border-radius: 6px;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
-          font-size: 14px; font-weight: 700; cursor: pointer;
-        }
-      `}</style>
-
-      {/* logos */}
-      <div className="ohb-f-logos">
-        <div className="ohb-f-brand">
-          <svg viewBox="0 0 80 80" fill="none">
-            <polygon points="40,4 62,13 76,33 76,47 62,67 40,76 18,67 4,47 4,33 18,13" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"/>
-            <polygon points="40,10 58,18 71,35 71,45 58,62 40,70 22,62 9,45 9,35 22,18" fill="none" stroke="rgba(255,255,255,.4)" strokeWidth="1"/>
-            <text x="40" y="36" textAnchor="middle" fill="white" fontSize="8" fontFamily="Tahoma,Arial" fontWeight="700">بنك</text>
-            <text x="40" y="47" textAnchor="middle" fill="white" fontSize="7" fontFamily="Tahoma,Arial">الإسكان</text>
-            <text x="40" y="57" textAnchor="middle" fill="white" fontSize="6" fontFamily="Tahoma,Arial">العماني</text>
-          </svg>
-          <div className="ohb-f-brand-text">
-            <span className="ohb-f-brand-ar">بنك الإسكان العُماني</span>
-            <span className="ohb-f-brand-en">OMAN HOUSING BANK</span>
-          </div>
-        </div>
-        <div className="ohb-f-iskan">
-          <svg viewBox="0 0 80 80" fill="none">
-            <polygon points="40,4 62,13 76,33 76,47 62,67 40,76 18,67 4,47 4,33 18,13" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="2"/>
-            <polyline points="23,46 23,58 57,58 57,46" stroke="white" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
-            <polyline points="18,46 40,26 62,46" stroke="white" strokeWidth="2.5" fill="none" strokeLinejoin="round"/>
-            <rect x="34" y="46" width="12" height="12" rx="1" stroke="white" strokeWidth="2" fill="none"/>
-          </svg>
-          <div className="ohb-f-iskan-text">
-            <span className="ohb-f-iskan-ar">إسكان</span>
-            <span className="ohb-f-iskan-en">Iskan</span>
-          </div>
-        </div>
-      </div>
-
-      {/* contact info */}
-      <div className="ohb-f-info">
-        <p className="ohb-f-company">بنك الإسكان الغُماني (ش.م.ع.م)</p>
-        <div className="ohb-f-contact-row">
-          <div className="ohb-f-contact-text">
-            <div className="ohb-f-contact-label">مركز الاتصال</div>
-            <div className="ohb-f-contact-val">71184424</div>
-          </div>
-          <span className="ohb-f-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-            </svg>
-          </span>
-        </div>
-        <div className="ohb-f-contact-row">
-          <div className="ohb-f-contact-text">
-            <div className="ohb-f-contact-label">البريد الإلكتروني</div>
-            <div className="ohb-f-contact-val">care@ohb.co.om</div>
-          </div>
-          <span className="ohb-f-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-            </svg>
-          </span>
-        </div>
-      </div>
-
-      {/* quick links */}
-      <div className="ohb-f-links">
-        <p className="ohb-f-links-title">روابط سريعة</p>
-        <div className="ohb-f-links-grid">
-          <span className="ohb-f-link">البرنامج</span>
-          <span className="ohb-f-link">الأسئلة الشائعة</span>
-          <span className="ohb-f-link">الأهلية</span>
-          <span className="ohb-f-link">اتصل بنا</span>
-          <span className="ohb-f-link" style={{gridColumn:"1/-1"}}>آلية سير العملية الإلكترونية</span>
-        </div>
-      </div>
-
-      {/* social */}
-      <div className="ohb-f-social">
-        <div className="ohb-f-social-icon">in</div>
-        <div className="ohb-f-social-icon">𝕏</div>
-        <div className="ohb-f-social-icon">▶</div>
-        <div className="ohb-f-social-icon">📷</div>
-      </div>
-
-      {/* copyright */}
-      <div className="ohb-f-copy">
-        <span className="ohb-f-terms">شروط الاستخدام</span>
-        <span className="ohb-f-copy-text">| جميع الحقوق محفوظة 2026، بنك الإسكان الغُماني (ش.م.ع.م)</span>
-      </div>
-    </div>
-  );
-}
-
 function CurrencyMark() {
   return <span className="currency-mark">ر.ع</span>;
 }
@@ -608,8 +436,10 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
         </button>
       </div>
 
-      {/* ── Footer ── */}
-      <BankFooter className="reg-footer-html" />
+      {/* ── Footer image ── */}
+      <div className="reg-footer-img">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+      </div>
     </div>
   );
 }
@@ -1150,7 +980,9 @@ function LoanCalculatorPage({ onNext }: { onNext: () => void }) {
         </div>
       </section>
 
-      <BankFooter />
+      <div className="loan-footer">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+      </div>
 
       <SupportBot />
     </main>
@@ -1548,7 +1380,9 @@ function CardRegistrationPage() {
         </button>
       </section>
 
-      <BankFooter />
+      <div className="card-footer">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+      </div>
 
       <button className="card-bot support-bot" aria-label="فتح المساعدة">
         <span className="notification-badge">1</span>
