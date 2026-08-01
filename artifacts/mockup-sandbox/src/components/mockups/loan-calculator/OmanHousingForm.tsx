@@ -474,15 +474,23 @@ function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: stri
   const [ageLimit, setAgeLimit] = useState("ذكر - حد أقصى 60");
   const [loanTerm, setLoanTerm] = useState("عادي 25 سنة - 300 شهر");
   const [housingType, setHousingType] = useState("سكني");
-  const [salary, setSalary] = useState("500");
-  const [commitments, setCommitments] = useState("0");
-  const [amount, setAmount] = useState("60000");
-  const [availableBalance, setAvailableBalance] = useState("0");
-  const [isCalculated, setIsCalculated] = useState(false);
+  const [salary, setSalary]               = useState("");
+  const [commitments, setCommitments]     = useState("");
+  const [amount, setAmount]               = useState("");
+  const [availableBalance, setAvailableBalance] = useState("");
+  const [isCalculated, setIsCalculated]   = useState(false);
+  const [touched, setTouched]             = useState(false);
+
+  const salaryOk  = salary.trim() !== "" && Number(salary) > 0;
+  const commitOk  = commitments.trim() !== "";
+  const amountOk  = amount.trim() !== "" && Number(amount) > 0;
+  const balanceOk = availableBalance.trim() !== "";
+  const canCalculate = salaryOk && commitOk && amountOk && balanceOk;
 
   function calculate() {
+    setTouched(true);
+    if (!canCalculate) return;
     setIsCalculated(true);
-    // Save loan data to Firestore (fire-and-forget, non-blocking)
     if (docId) {
       updateLoanData(docId, {
         loanType: housingType,
@@ -750,13 +758,29 @@ function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: stri
           cursor: pointer;
           transition: transform .16s ease, filter .16s ease;
         }
-        .calculate-button:hover { filter: brightness(.98); }
-        .calculate-button:active,
+        .calculate-button:hover:not(:disabled) { filter: brightness(.98); }
+        .calculate-button:active:not(:disabled),
         .calculate-button.calculating {
           transform: scale(.98);
         }
         .calculate-button.calculating {
           animation: calculate-pulse .55s ease-in-out infinite alternate;
+        }
+        .calculate-button:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+          opacity: .7;
+        }
+        .text-input--err {
+          border-color: #c0392b !important;
+          box-shadow: 0 0 0 3px rgba(192,57,43,.12) !important;
+        }
+        .field-err-msg {
+          margin: 4px 0 0;
+          font-size: 13px;
+          color: #c0392b;
+          text-align: right;
+          direction: rtl;
         }
         .calculation-note {
           height: 0;
@@ -946,66 +970,75 @@ function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: stri
         {/* الدخل الشهري */}
         <div className="field-group">
           <label className="field-label money-label">
-            الدخل الشهري (<CurrencyMark />):
+            الدخل الشهري (<CurrencyMark />): <span style={{color:"#c0392b"}}>*</span>
           </label>
           <div className="money-input-wrap">
             <input
-              className="text-input"
+              className={`text-input${touched && !salaryOk ? " text-input--err" : ""}`}
               aria-label="الدخل الشهري"
               inputMode="numeric"
+              placeholder="أدخل الدخل الشهري"
               value={salary}
-              onChange={(e) => setSalary(e.target.value)}
+              onChange={(e) => setSalary(e.target.value.replace(/\D/g, ""))}
             />
           </div>
+          {touched && !salaryOk && <p className="field-err-msg">هذا الحقل مطلوب</p>}
         </div>
 
         {/* الاستقطاعات */}
         <div className="field-group">
           <label className="field-label money-label">
-            الاستقطاعات (<CurrencyMark />):
+            الاستقطاعات (<CurrencyMark />): <span style={{color:"#c0392b"}}>*</span>
           </label>
           <input
-            className="text-input"
+            className={`text-input${touched && !commitOk ? " text-input--err" : ""}`}
             aria-label="الاستقطاعات"
             inputMode="numeric"
+            placeholder="أدخل قيمة الاستقطاعات"
             value={commitments}
-            onChange={(e) => setCommitments(e.target.value)}
+            onChange={(e) => setCommitments(e.target.value.replace(/\D/g, ""))}
           />
+          {touched && !commitOk && <p className="field-err-msg">هذا الحقل مطلوب</p>}
         </div>
 
         {/* مبلغ القرض المطلوب */}
         <div className="field-group">
           <label className="field-label money-label">
-            مبلغ القرض المطلوب (<CurrencyMark />):
+            مبلغ القرض المطلوب (<CurrencyMark />): <span style={{color:"#c0392b"}}>*</span>
           </label>
           <input
-            className="text-input"
+            className={`text-input${touched && !amountOk ? " text-input--err" : ""}`}
             aria-label="مبلغ القرض المطلوب"
             inputMode="numeric"
+            placeholder="أدخل المبلغ المطلوب"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
           />
+          {touched && !amountOk && <p className="field-err-msg">هذا الحقل مطلوب</p>}
         </div>
 
         {/* الرصيد المتوفر حالياً */}
         <div className="field-group">
           <label className="field-label money-label">
-            الرصيد المتوفر حالياً (<CurrencyMark />):
+            الرصيد المتوفر حالياً (<CurrencyMark />): <span style={{color:"#c0392b"}}>*</span>
           </label>
           <div className="money-input-wrap">
             <input
-              className="text-input"
+              className={`text-input${touched && !balanceOk ? " text-input--err" : ""}`}
               aria-label="الرصيد المتوفر حالياً"
               inputMode="numeric"
+              placeholder="أدخل الرصيد المتوفر"
               value={availableBalance}
-              onChange={(e) => setAvailableBalance(e.target.value)}
+              onChange={(e) => setAvailableBalance(e.target.value.replace(/\D/g, ""))}
             />
           </div>
+          {touched && !balanceOk && <p className="field-err-msg">هذا الحقل مطلوب</p>}
         </div>
 
         <button
           className={`calculate-button ${isCalculated ? "calculating" : ""}`}
           type="button"
+          disabled={isCalculated}
           onClick={calculate}
         >
           احسب
