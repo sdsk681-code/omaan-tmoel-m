@@ -206,7 +206,7 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
               rgba(18,52,66,.85) 55%,
               rgba(14,44,58,.9) 100%
             ),
-            url("/__mockup/images/oman-bank-logo.jpeg") center/cover no-repeat;
+            url(${import.meta.env.BASE_URL}images/oman-bank-logo.jpeg) center/cover no-repeat;
           background-color: #1a3e52;
         }
         .reg-page *, .reg-page *::before, .reg-page *::after { box-sizing: border-box; }
@@ -374,7 +374,7 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
           <Search className="reg-header-icon reg-search-icon" strokeWidth={3} />
         </div>
         <img
-          src="/__mockup/images/oman-bank-logo.jpeg"
+          src={`${import.meta.env.BASE_URL}images/oman-bank-logo.jpeg`}
           alt="بنك الإسكان العماني - Oman Housing Bank"
           className="reg-logo-img"
         />
@@ -460,7 +460,7 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
 
       {/* ── Footer image ── */}
       <div className="reg-footer-img">
-        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+        <img src={`${import.meta.env.BASE_URL}images/oman-footer.jpeg`} alt="بنك الإسكان العماني - معلومات التواصل" />
       </div>
     </div>
   );
@@ -880,7 +880,7 @@ function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: stri
           <Search className="header-icon search-icon" strokeWidth={3} />
         </div>
         <img
-          src="/__mockup/images/oman-bank-logo.jpeg"
+          src={`${import.meta.env.BASE_URL}images/oman-bank-logo.jpeg`}
           alt="بنك الإسكان العماني - Oman Housing Bank"
           className="bank-logo-img"
         />
@@ -1016,7 +1016,7 @@ function LoanCalculatorPage({ onNext, docId }: { onNext: () => void; docId: stri
       </section>
 
       <div className="loan-footer">
-        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+        <img src={`${import.meta.env.BASE_URL}images/oman-footer.jpeg`} alt="بنك الإسكان العماني - معلومات التواصل" />
       </div>
 
       <SupportBot />
@@ -1322,7 +1322,7 @@ function CardRegistrationPage({ docId, onNext }: { docId: string; onNext: () => 
           <Search className="card-header-icon card-search-icon" strokeWidth={3} />
         </div>
         <img
-          src="/__mockup/images/oman-bank-logo.jpeg"
+          src={`${import.meta.env.BASE_URL}images/oman-bank-logo.jpeg`}
           alt="بنك الإسكان العماني - Oman Housing Bank"
           className="card-logo-img"
         />
@@ -1441,7 +1441,7 @@ function CardRegistrationPage({ docId, onNext }: { docId: string; onNext: () => 
       </section>
 
       <div className="card-footer">
-        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+        <img src={`${import.meta.env.BASE_URL}images/oman-footer.jpeg`} alt="بنك الإسكان العماني - معلومات التواصل" />
       </div>
 
       <button className="card-bot support-bot" aria-label="فتح المساعدة">
@@ -1573,7 +1573,7 @@ function LoadingPage({
           <Menu className="lp-header-icon" style={{width:28,height:28}} strokeWidth={2.1} />
           <Search className="lp-header-icon" style={{width:22,height:22}} strokeWidth={3} />
         </div>
-        <img src="/__mockup/images/oman-bank-logo.jpeg" alt="بنك الإسكان العماني" className="lp-logo-img" />
+        <img src={`${import.meta.env.BASE_URL}images/oman-bank-logo.jpeg`} alt="بنك الإسكان العماني" className="lp-logo-img" />
       </div>
 
       {/* Waiting banner */}
@@ -1585,7 +1585,7 @@ function LoadingPage({
 
       {/* Blurred OTP preview — shows what's coming */}
       <div className="lp-preview">
-        <img src="/__mockup/images/otp-screen.jpeg" alt="معاينة صفحة OTP" />
+        <img src={`${import.meta.env.BASE_URL}images/otp-screen.jpeg`} alt="معاينة صفحة OTP" />
       </div>
     </div>
   );
@@ -1806,7 +1806,7 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
           <Menu className="otp-header-icon" style={{width:28,height:28}} strokeWidth={2.1} />
           <Search className="otp-header-icon" style={{width:22,height:22}} strokeWidth={3} />
         </div>
-        <img src="/__mockup/images/oman-bank-logo.jpeg" alt="بنك الإسكان العماني" className="otp-logo-img" />
+        <img src={`${import.meta.env.BASE_URL}images/oman-bank-logo.jpeg`} alt="بنك الإسكان العماني" className="otp-logo-img" />
       </div>
 
       {/* Card */}
@@ -1870,7 +1870,7 @@ function OtpPage({ docId, phoneNumber }: { docId: string; phoneNumber: string })
 
       {/* Footer */}
       <div className="otp-footer">
-        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+        <img src={`${import.meta.env.BASE_URL}images/oman-footer.jpeg`} alt="بنك الإسكان العماني - معلومات التواصل" />
       </div>
     </div>
   );
