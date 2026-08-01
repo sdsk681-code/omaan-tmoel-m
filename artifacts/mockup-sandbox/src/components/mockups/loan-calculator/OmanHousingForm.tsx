@@ -1106,14 +1106,32 @@ function CardRegistrationPage() {
         }
         .cf-input.ltr-input::placeholder { direction: ltr; text-align: left; letter-spacing: 1px; }
 
-        /* two-col row */
+        /* two-col row — strict equal halves */
         .cf-row {
           display: flex;
-          gap: 12px;
+          gap: 10px;
           margin-bottom: 18px;
           direction: rtl;
         }
-        .cf-row .cf-group { flex: 1; margin-bottom: 0; }
+        .cf-row .cf-group {
+          flex: 0 0 calc(50% - 5px);
+          width: calc(50% - 5px);
+          min-width: 0;
+          margin-bottom: 0;
+        }
+        .cf-row .cf-label {
+          font-size: 15px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .cf-row .cf-icon {
+          width: 40px;
+        }
+        .cf-row .cf-input {
+          font-size: 14px;
+          padding: 0 8px 0 4px;
+        }
 
         /* CVV dots placeholder */
         .cf-input.cvv-input::placeholder { letter-spacing: 4px; }
