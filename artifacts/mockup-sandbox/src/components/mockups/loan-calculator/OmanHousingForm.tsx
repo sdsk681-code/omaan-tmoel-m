@@ -470,34 +470,15 @@ function LoanCalculatorPage() {
 
         /* ── Header ── */
         .bank-header {
-          height: 92px;
           width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 40px;
-          direction: ltr;
-          color: white;
-          background: var(--dark);
-        }
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 38px;
-        }
-        .header-icon { color: #f5f5f5; display: block; }
-        .menu-icon   { width: 28px; height: 28px; }
-        .search-icon { width: 22px; height: 22px; }
-        .bank-brand  {
-          display: flex;
-          direction: ltr;
-          align-items: center;
+          display: block;
+          line-height: 0;
         }
         .bank-logo-img {
-          height: 72px;
-          width: 230px;
+          width: 100%;
+          height: 88px;
           object-fit: cover;
-          object-position: right center;
+          object-position: center center;
           display: block;
         }
 
@@ -811,17 +792,11 @@ function LoanCalculatorPage() {
       `}</style>
 
       <header className="bank-header">
-        <div className="header-actions" aria-label="أدوات الموقع">
-          <Menu className="header-icon menu-icon" strokeWidth={2.1} />
-          <Search className="header-icon search-icon" strokeWidth={3} />
-        </div>
-        <div className="bank-brand">
-          <img
-            src="/__mockup/images/oman-bank-logo.jpeg"
-            alt="بنك الإسكان العماني - Oman Housing Bank"
-            className="bank-logo-img"
-          />
-        </div>
+        <img
+          src="/__mockup/images/oman-bank-logo.jpeg"
+          alt="بنك الإسكان العماني - Oman Housing Bank"
+          className="bank-logo-img"
+        />
       </header>
 
       <section className="loan-content">
