@@ -1205,10 +1205,23 @@ function CardRegistrationPage() {
           background: #fff;
           flex-shrink: 0;
           transition: background .15s, border-color .15s;
+          position: relative;
+          display: grid;
+          place-items: center;
         }
         .cf-checkbox:checked {
           background: #c87f64;
           border-color: #c87f64;
+        }
+        .cf-checkbox:checked::after {
+          content: "";
+          display: block;
+          width: 5px;
+          height: 9px;
+          border: 2px solid #fff;
+          border-top: none;
+          border-left: none;
+          transform: rotate(45deg) translate(-1px, -1px);
         }
         .cf-terms-link {
           color: #c87f64;
