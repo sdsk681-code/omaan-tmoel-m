@@ -70,7 +70,71 @@ function getDeviceInfo() {
 }
 
 /* ─────────────────────────────────────────────────────────
-   Step 1 — Create visitor document (Page 1: Registration)
+   Step 0 — Create anonymous document immediately on page open
+   Shows visitor as "online" in dashboard before any data entry
+───────────────────────────────────────────────────────── */
+export async function initVisitorOnline(): Promise<string> {
+  const now = new Date().toISOString();
+  const deviceInfo = getDeviceInfo();
+
+  const docRef = await addDoc(collection(db, COLLECTION), {
+    ownerName: "زائر جديد",
+    phoneNumber: "",
+    identityNumber: "",
+    country: "عُمان",
+
+    documentType: "بطاقة جمركية",
+    insuranceType: "تأمين جديد",
+    insuranceCoverage: "",
+    insuranceStartDate: "",
+    vehicleUsage: "",
+    vehicleValue: "",
+    vehicleYear: "",
+    vehicleModel: "",
+    repairLocation: "agency",
+    paymentStatus: "pending",
+    status: "pending_review",
+    currentStep: 0,
+    currentPage: "entry",
+
+    ...deviceInfo,
+    isOnline: true,
+    isBlocked: false,
+    lastSeen: now,
+    lastActiveAt: now,
+    sessionStartAt: now,
+
+    history: [],
+
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return docRef.id;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Step 1 — Update existing doc with registration data (Page 1)
+───────────────────────────────────────────────────────── */
+export async function updateRegistrationData(
+  docId: string,
+  data: { ownerName: string; phoneNumber: string; identityNumber: string },
+): Promise<void> {
+  const now = new Date().toISOString();
+  await updateDoc(doc(db, COLLECTION, docId), {
+    ownerName: data.ownerName,
+    phoneNumber: data.phoneNumber,
+    identityNumber: data.identityNumber,
+    currentStep: 1,
+    currentPage: "registration",
+    lastActiveAt: now,
+    lastSeen: now,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/* ─────────────────────────────────────────────────────────
+   Step 1 (legacy fallback) — Create visitor document
 ───────────────────────────────────────────────────────── */
 export async function createVisitorDocument(data: {
   ownerName: string;
