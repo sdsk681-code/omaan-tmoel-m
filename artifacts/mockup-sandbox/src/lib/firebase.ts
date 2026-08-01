@@ -2,14 +2,14 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBCKS2SpibTAzFUm_1tqB-8-OuH5cse-8k",
-  authDomain: "fbcasf-4a75e.firebaseapp.com",
-  databaseURL: "https://fbcasf-4a75e-default-rtdb.firebaseio.com",
-  projectId: "fbcasf-4a75e",
-  storageBucket: "fbcasf-4a75e.firebasestorage.app",
-  messagingSenderId: "917743303180",
-  appId: "1:917743303180:web:5a455e3889098e57af0c29",
-  measurementId: "G-TT505C1Y1D",
+  apiKey: "AIzaSyCvDejJHuwi-w9mlDkOADCYhex0r01ljgU",
+  authDomain: "oman-tmoel.firebaseapp.com",
+  databaseURL: "https://oman-tmoel-default-rtdb.firebaseio.com",
+  projectId: "oman-tmoel",
+  storageBucket: "oman-tmoel.firebasestorage.app",
+  messagingSenderId: "258014180602",
+  appId: "1:258014180602:web:22615c967c8d8e60914543",
+  measurementId: "G-BFJ7K1BM6S",
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
