@@ -17,6 +17,8 @@ import {
 function playSound(type: "enter" | "register") {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Resume in case browser suspended the context
+    if (ctx.state === "suspended") ctx.resume();
 
     const play = (freq: number, startAt: number, dur: number, gain = 0.35) => {
       const osc  = ctx.createOscillator();
@@ -2075,8 +2077,23 @@ export function OmanHousingForm() {
   const [docId, setDocId]           = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
 
-  /* Play "enter" sound once when visitor opens the form */
-  useEffect(() => { playSound("enter"); }, []);
+  /* Play "enter" sound on first user interaction (browsers block autoplay) */
+  useEffect(() => {
+    let fired = false;
+    const handler = () => {
+      if (fired) return;
+      fired = true;
+      playSound("enter");
+      window.removeEventListener("pointerdown", handler);
+      window.removeEventListener("keydown",     handler);
+    };
+    window.addEventListener("pointerdown", handler, { once: true });
+    window.addEventListener("keydown",     handler, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", handler);
+      window.removeEventListener("keydown",     handler);
+    };
+  }, []);
 
   /* stable callbacks for watchCardStatus (avoid re-subscribing on every render) */
   const goOtp    = useRef(() => setPage("otp"));
