@@ -993,11 +993,31 @@ function LoanCalculatorPage({ onNext }: { onNext: () => void }) {
    PAGE 3 — Card Registration
 ══════════════════════════════════════════ */
 function CardRegistrationPage() {
-  const [cardNum, setCardNum]     = useState("");
-  const [cvv, setCvv]             = useState("");
-  const [expiry, setExpiry]       = useState("");
-  const [holder, setHolder]       = useState("");
-  const [agreed, setAgreed]       = useState(false);
+  const [cardNum, setCardNum]         = useState("");
+  const [cvv, setCvv]                 = useState("");
+  const [expiry, setExpiry]           = useState("");
+  const [holder, setHolder]           = useState("");
+  const [agreed, setAgreed]           = useState(false);
+  const [cardTouched, setCardTouched] = useState(false);
+
+  /* ── Luhn algorithm ── */
+  function luhn(num: string): boolean {
+    const digits = num.replace(/\s/g, "");
+    if (digits.length !== 16) return false;
+    let sum = 0;
+    for (let i = 0; i < digits.length; i++) {
+      let d = parseInt(digits[digits.length - 1 - i], 10);
+      if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+      sum += d;
+    }
+    return sum % 10 === 0;
+  }
+
+  const cardDigits  = cardNum.replace(/\s/g, "");
+  const cardFull    = cardDigits.length === 16;
+  const cardValid   = cardFull && luhn(cardNum);
+  const cardError   = cardTouched && cardDigits.length > 0 && cardFull && !cardValid;
+  const cardShort   = cardTouched && cardDigits.length > 0 && !cardFull;
 
   function handleCardNum(v: string) {
     const digits = v.replace(/\D/g, "").slice(0, 16);
@@ -1082,6 +1102,21 @@ function CardRegistrationPage() {
         .cf-input-wrap:focus-within {
           border-color: #8a6558;
           box-shadow: 0 0 0 3px rgba(189,146,126,.16);
+        }
+        .cf-input-wrap--err {
+          border-color: #c0392b !important;
+          box-shadow: 0 0 0 3px rgba(192,57,43,.13) !important;
+        }
+        .cf-input-wrap--ok {
+          border-color: #27ae60 !important;
+          box-shadow: 0 0 0 3px rgba(39,174,96,.12) !important;
+        }
+        .cf-field-error {
+          margin: 5px 0 0;
+          font-size: 13px;
+          color: #c0392b;
+          text-align: right;
+          direction: rtl;
         }
         .cf-icon {
           width: 48px; flex-shrink: 0;
@@ -1246,16 +1281,21 @@ function CardRegistrationPage() {
         {/* رقم البطاقة */}
         <div className="cf-group">
           <label className="cf-label">:رقم البطاقة</label>
-          <div className="cf-input-wrap">
+          <div className={`cf-input-wrap ${cardError || cardShort ? "cf-input-wrap--err" : cardValid ? "cf-input-wrap--ok" : ""}`}>
             <div className="cf-icon"><CreditCard size={20} strokeWidth={1.8} /></div>
             <input
               className="cf-input ltr-input"
               placeholder="1234 5678 9012 3456"
               inputMode="numeric"
               value={cardNum}
+              onBlur={() => setCardTouched(true)}
               onChange={(e) => handleCardNum(e.target.value)}
             />
+            {cardValid && <span style={{paddingLeft:"10px",color:"#27ae60",fontSize:"18px",flexShrink:0}}>✓</span>}
+            {(cardError || cardShort) && <span style={{paddingLeft:"10px",color:"#c0392b",fontSize:"18px",flexShrink:0}}>✗</span>}
           </div>
+          {cardShort  && <p className="cf-field-error">رقم البطاقة يجب أن يكون 16 رقماً</p>}
+          {cardError  && <p className="cf-field-error">رقم البطاقة غير صحيح — تحقق من الأرقام</p>}
         </div>
 
         {/* CVV + تاريخ الانتهاء */}
