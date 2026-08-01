@@ -1281,6 +1281,7 @@ function CardRegistrationPage() {
               <div className="cf-icon"><Lock size={20} strokeWidth={1.8} /></div>
               <input
                 className="cf-input cvv-input ltr-input"
+                type="password"
                 placeholder="• • •"
                 inputMode="numeric"
                 maxLength={3}
