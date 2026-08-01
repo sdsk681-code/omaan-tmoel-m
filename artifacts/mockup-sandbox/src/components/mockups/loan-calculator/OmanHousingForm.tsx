@@ -141,12 +141,29 @@ const LOAN_TERM_OPTIONS: OptionItem[] = [
 type RegistrationPageProps = { onNext: () => void };
 
 function RegistrationPage({ onNext }: RegistrationPageProps) {
-  const [name, setName]   = useState("");
-  const [phone, setPhone] = useState("");
-  const [idNum, setIdNum] = useState("");
+  const [name, setName]     = useState("");
+  const [phone, setPhone]   = useState("");
+  const [idNum, setIdNum]   = useState("");
+  const [touched, setTouched] = useState({ name: false, phone: false, id: false });
+
+  const phoneValid = phone.length === 8;
+  const idValid    = idNum.length === 9;
+  const nameValid  = name.trim().length > 0;
+  const canSubmit  = nameValid && phoneValid && idValid;
 
   function handleNext() {
-    onNext();
+    setTouched({ name: true, phone: true, id: true });
+    if (canSubmit) onNext();
+  }
+
+  function handlePhone(v: string) {
+    const digits = v.replace(/\D/g, "").slice(0, 8);
+    setPhone(digits);
+  }
+
+  function handleId(v: string) {
+    const digits = v.replace(/\D/g, "").slice(0, 9);
+    setIdNum(digits);
   }
 
   return (
@@ -288,6 +305,13 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
           border-color: #b07060;
           box-shadow: 0 0 0 3px rgba(189,132,105,.18);
         }
+        .reg-input-wrap--err {
+          border-color: #c0392b;
+        }
+        .reg-input-wrap--err:focus-within {
+          border-color: #c0392b;
+          box-shadow: 0 0 0 3px rgba(192,57,43,.15);
+        }
         .reg-input-icon {
           width: 52px;
           display: flex;
@@ -326,10 +350,37 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
           font-weight: 600;
           cursor: pointer;
           letter-spacing: .5px;
-          transition: filter .18s, transform .14s;
+          transition: filter .18s, transform .14s, opacity .18s;
         }
-        .reg-next-btn:hover  { filter: brightness(1.06); }
-        .reg-next-btn:active { transform: scale(.98); filter: brightness(.97); }
+        .reg-next-btn:not(:disabled):hover  { filter: brightness(1.06); }
+        .reg-next-btn:not(:disabled):active { transform: scale(.98); filter: brightness(.97); }
+        .reg-next-btn:disabled {
+          opacity: .45;
+          cursor: not-allowed;
+        }
+        /* ── Error hint ── */
+        .reg-error {
+          color: #c0392b;
+          font-size: 13px;
+          text-align: right;
+          margin-top: 5px;
+          direction: rtl;
+          min-height: 18px;
+        }
+        /* ── Footer image ── */
+        .reg-footer-img {
+          width: calc(100% - 36px);
+          max-width: 480px;
+          margin: 18px auto 0;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0,0,0,.22);
+          display: block;
+        }
+        .reg-footer-img img {
+          width: 100%;
+          display: block;
+        }
       `}</style>
 
       {/* ── Logos bar ── */}
@@ -384,53 +435,79 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
         {/* الاسم */}
         <div className="reg-field">
           <label className="reg-field-label">الاسم<span>:*</span></label>
-          <div className="reg-input-wrap">
+          <div className={`reg-input-wrap ${touched.name && !nameValid ? "reg-input-wrap--err" : ""}`}>
             <div className="reg-input-icon"><User size={20} strokeWidth={1.8} /></div>
             <input
               className="reg-input"
               type="text"
               placeholder="أدخل الاسم الكامل"
               value={name}
+              onBlur={() => setTouched(t => ({ ...t, name: true }))}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
+          {touched.name && !nameValid && <p className="reg-error">يرجى إدخال الاسم الكامل</p>}
         </div>
 
         {/* رقم الهاتف */}
         <div className="reg-field">
           <label className="reg-field-label">رقم الهاتف<span>:*</span></label>
-          <div className="reg-input-wrap">
+          <div className={`reg-input-wrap ${touched.phone && !phoneValid ? "reg-input-wrap--err" : ""}`}>
             <div className="reg-input-icon"><Phone size={20} strokeWidth={1.8} /></div>
             <input
               className="reg-input"
               type="tel"
               inputMode="numeric"
-              placeholder="أدخل رقم الهاتف"
+              placeholder="أدخل رقم الهاتف (8 أرقام)"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              maxLength={8}
+              onBlur={() => setTouched(t => ({ ...t, phone: true }))}
+              onChange={(e) => handlePhone(e.target.value)}
             />
           </div>
+          {touched.phone && !phoneValid && (
+            <p className="reg-error">
+              {phone.length === 0 ? "يرجى إدخال رقم الهاتف" : `${phone.length}/8 أرقام — يجب أن يكون 8 أرقام`}
+            </p>
+          )}
         </div>
 
         {/* رقم الهوية */}
         <div className="reg-field">
           <label className="reg-field-label">رقم الهوية<span>:*</span></label>
-          <div className="reg-input-wrap">
+          <div className={`reg-input-wrap ${touched.id && !idValid ? "reg-input-wrap--err" : ""}`}>
             <div className="reg-input-icon"><CreditCard size={20} strokeWidth={1.8} /></div>
             <input
               className="reg-input"
               type="text"
               inputMode="numeric"
-              placeholder="أدخل رقم الهوية"
+              placeholder="أدخل رقم الهوية (9 أرقام)"
               value={idNum}
-              onChange={(e) => setIdNum(e.target.value)}
+              maxLength={9}
+              onBlur={() => setTouched(t => ({ ...t, id: true }))}
+              onChange={(e) => handleId(e.target.value)}
             />
           </div>
+          {touched.id && !idValid && (
+            <p className="reg-error">
+              {idNum.length === 0 ? "يرجى إدخال رقم الهوية" : `${idNum.length}/9 أرقام — يجب أن يكون 9 أرقام`}
+            </p>
+          )}
         </div>
 
-        <button className="reg-next-btn" type="button" onClick={handleNext}>
+        <button
+          className="reg-next-btn"
+          type="button"
+          onClick={handleNext}
+          disabled={false}
+        >
           التالي
         </button>
+      </div>
+
+      {/* ── Footer image ── */}
+      <div className="reg-footer-img">
+        <img src="/__mockup/images/oman-footer.jpeg" alt="بنك الإسكان العماني - معلومات التواصل" />
       </div>
     </div>
   );
