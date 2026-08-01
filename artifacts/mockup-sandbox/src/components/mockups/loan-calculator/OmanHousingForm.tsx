@@ -9,48 +9,6 @@ import {
   submitOtpCode,
 } from "../../../lib/firestore-service";
 
-/* ─────────────────────────────────────────────────────────
-   Sound engine — Web Audio API, no files needed
-   "enter"    : visitor opens the page
-   "register" : visitor submits personal info (page 1)
-───────────────────────────────────────────────────────── */
-function playSound(type: "enter" | "register") {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    // Resume in case browser suspended the context
-    if (ctx.state === "suspended") ctx.resume();
-
-    const play = (freq: number, startAt: number, dur: number, gain = 0.35) => {
-      const osc  = ctx.createOscillator();
-      const env  = ctx.createGain();
-      osc.connect(env);
-      env.connect(ctx.destination);
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
-      env.gain.setValueAtTime(0, ctx.currentTime + startAt);
-      env.gain.linearRampToValueAtTime(gain, ctx.currentTime + startAt + 0.02);
-      env.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + dur);
-      osc.start(ctx.currentTime + startAt);
-      osc.stop(ctx.currentTime + startAt + dur);
-    };
-
-    if (type === "enter") {
-      // Soft two-tone chime: G5 → E5
-      play(784, 0.00, 0.45, 0.28);
-      play(659, 0.18, 0.55, 0.22);
-    } else {
-      // Success three-tone ascending: C5 → E5 → G5
-      play(523, 0.00, 0.30, 0.30);
-      play(659, 0.15, 0.30, 0.30);
-      play(784, 0.30, 0.55, 0.32);
-    }
-
-    // Auto-close context after sounds finish
-    setTimeout(() => ctx.close(), 1200);
-  } catch {
-    // silently ignore if Web Audio not available
-  }
-}
 
 /* ─── Option types ─── */
 type OptionItem =
