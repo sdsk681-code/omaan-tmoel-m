@@ -189,69 +189,19 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
         }
         .reg-page *, .reg-page *::before, .reg-page *::after { box-sizing: border-box; }
 
-        /* ── Top logos bar ── */
+        /* ── Top logo bar ── */
         .reg-logos {
           width: 100%;
-          padding: 28px 36px 22px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0;
-          direction: ltr;
         }
-        /* Iskan logo (left) */
-        .iskan-logo {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding-left: 28px;
-          border-left: 1.5px solid rgba(255,255,255,.45);
-        }
-        .iskan-icon {
-          width: 54px; height: 54px;
-          flex-shrink: 0;
-        }
-        .iskan-text { display: flex; flex-direction: column; align-items: flex-start; }
-        .iskan-ar {
-          color: #fff;
-          font-size: 22px;
-          font-weight: 700;
-          line-height: 1.15;
-          direction: rtl;
-          letter-spacing: .5px;
-        }
-        .iskan-en {
-          color: rgba(255,255,255,.82);
-          font-size: 16px;
-          font-weight: 400;
-          letter-spacing: 1px;
-        }
-        /* OHB logo (right) */
-        .ohb-logo {
-          display: flex;
-          align-items: center;
-          gap: 11px;
-          padding-right: 28px;
-        }
-        .ohb-emblem {
-          width: 54px; height: 54px;
-          flex-shrink: 0;
-        }
-        .ohb-text { display: flex; flex-direction: column; align-items: flex-end; }
-        .ohb-ar {
-          color: #fff;
-          font-size: 18px;
-          font-weight: 700;
-          line-height: 1.2;
-          direction: rtl;
-          white-space: nowrap;
-        }
-        .ohb-en {
-          color: rgba(255,255,255,.82);
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 1.4px;
-          white-space: nowrap;
+        .reg-logo-img {
+          width: 100%;
+          display: block;
+          object-fit: cover;
+          object-position: center center;
+          height: 88px;
         }
 
         /* ── White card ── */
@@ -383,48 +333,13 @@ function RegistrationPage({ onNext }: RegistrationPageProps) {
         }
       `}</style>
 
-      {/* ── Logos bar ── */}
+      {/* ── Logo bar ── */}
       <div className="reg-logos">
-        {/* OHB (right in ltr layout = first child) */}
-        <div className="ohb-logo">
-          {/* Octagonal emblem SVG */}
-          <svg className="ohb-emblem" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon
-              points="40,4 62,13 76,33 76,47 62,67 40,76 18,67 4,47 4,33 18,13"
-              fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="2.5"
-            />
-            <polygon
-              points="40,10 58,18 71,35 71,45 58,62 40,70 22,62 9,45 9,35 22,18"
-              fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="1"
-            />
-            <text x="40" y="36" textAnchor="middle" fill="white" fontSize="9" fontFamily="Tahoma,Arial" fontWeight="700">بنك</text>
-            <text x="40" y="48" textAnchor="middle" fill="white" fontSize="7.5" fontFamily="Tahoma,Arial">الإسكان</text>
-            <text x="40" y="59" textAnchor="middle" fill="white" fontSize="6.5" fontFamily="Tahoma,Arial">العماني</text>
-          </svg>
-          <div className="ohb-text">
-            <span className="ohb-ar">بنك الإسكان العُماني</span>
-            <span className="ohb-en">OMAN HOUSING BANK</span>
-          </div>
-        </div>
-
-        {/* Divider + Iskan */}
-        <div className="iskan-logo">
-          {/* House icon SVG */}
-          <svg className="iskan-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon
-              points="40,4 62,13 76,33 76,47 62,67 40,76 18,67 4,47 4,33 18,13"
-              fill="none" stroke="rgba(255,255,255,.85)" strokeWidth="2.5"
-            />
-            {/* House shape */}
-            <polyline points="23,46 23,58 57,58 57,46" stroke="white" strokeWidth="2.8" fill="none" strokeLinejoin="round"/>
-            <polyline points="18,46 40,26 62,46" stroke="white" strokeWidth="2.8" fill="none" strokeLinejoin="round"/>
-            <rect x="34" y="46" width="12" height="12" rx="1" stroke="white" strokeWidth="2.2" fill="none"/>
-          </svg>
-          <div className="iskan-text">
-            <span className="iskan-ar">إسكان</span>
-            <span className="iskan-en">Iskan</span>
-          </div>
-        </div>
+        <img
+          src="/__mockup/images/oman-bank-logo.jpeg"
+          alt="بنك الإسكان العماني - Oman Housing Bank"
+          className="reg-logo-img"
+        />
       </div>
 
       {/* ── Card ── */}
